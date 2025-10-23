@@ -1,53 +1,20 @@
-# 📁 Index de la Documentation du Projet
+# 📁 Project Documentation
 
-## 📖 Documentation Principale
+## 📖 Main Documentation
 
-### ⭐ **[PROJECT_DOCUMENTATION.md](../PROJECT_DOCUMENTATION.md)** 
-**Fichier consolidé principal** - Contient toute la documentation du projet en un seul endroit.
+The main project documentation is now available in the root `README.md` file, which provides:
+- 🚀 Quick start guide
+- 🏗️ Architecture overview
+- ✅ Features and capabilities
+- 🛠️ Installation instructions
+- 📊 API documentation
+- 🤝 Contributing guidelines
 
-**Sections incluses**:
-- 🚀 Démarrage rapide
-- 🏗️ Architecture du projet
-- ✅ Audits et corrections
-- 🎨 Améliorations UI/UX
-- 🤖 Intégration chatbot IA
-- 🔒 Authentification et rôles
-- 🌐 Mode découverte
-- 📊 Optimisation et performance
-- 🧪 Tests et validation
-- 🚢 Déploiement
-- 📝 Historique des modifications
+## 📂 Archived Documentation
 
----
+Previous documentation files have been archived and consolidated. The `docs/archive/` directory has been cleaned up to reduce repository size.
 
-## 📂 Documentation Archivée
-
-Tous les fichiers MD individuels ont été consolidés dans `PROJECT_DOCUMENTATION.md`.  
-Les fichiers originaux sont conservés dans le dossier `docs/archive/` pour référence.
-
-### Rapports d'Audit
-- `AUDIT_REPORT.md` - Audit UI/UX initial (octobre 2025)
-- `COMPREHENSIVE_AUDIT_REPORT.md` - Audit complet
-- `CODE_OPTIMIZATION_REPORT.md` - Analyse optimisation code
-- `PROJECT_HEALTH_CHECK.md` - Vérification santé projet
-
-### Guides d'Implémentation
-- `GUEST_MODE_IMPLEMENTATION.md` - Mode découverte
-- `CHATBOT_BACKEND_MIGRATION.md` - Migration backend chatbot
-- `CLAUDE_INTEGRATION_SUCCESS.md` - Intégration Claude
-- `AI_CHATBOT_INTEGRATION.md` - Chatbot IA général
-
-### Améliorations UI/UX
-- `HOME_PAGE_REDESIGN.md` - Refonte page d'accueil
-- `HOME_IMPROVEMENTS.md` - Améliorations home
-- `NAVBAR_ALIGNMENT_FIX.md` - Correction navbar
-- `LOGO_AND_SCROLL_UPDATE.md` - Logo et scroll
-- `USER_INFO_BUTTON_UPGRADE.md` - Bouton info utilisateur
-
-### Corrections et Fixes
-- `FIX_MODE_DECOUVERTE_DETAILS.md` - Fix détails mode découverte
-- `HOME_ROUTING_FIXES.md` - Corrections routing
-- `CORRECTIONS_APPLIED.md` - Corrections appliquées
+For historical documentation or development notes, please refer to the git history or previous commits.
 - `PROJECT_DIAGNOSIS_AND_RESTORATION.md` - Diagnostic projet
 
 ### Guides Techniques
