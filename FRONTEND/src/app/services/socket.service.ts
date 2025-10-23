@@ -39,6 +39,36 @@ export class SocketService {
     });
   }
 
+  onUserCreated(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userCreated', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserUpdated(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userUpdated', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserDeleted(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userDeleted', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserApproved(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userApproved', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserRejected(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userRejected', (data: any) => observer.next(data));
+    });
+  }
+
   disconnect() {
     this.socket.disconnect();
   }

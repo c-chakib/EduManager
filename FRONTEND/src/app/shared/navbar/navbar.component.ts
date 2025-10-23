@@ -56,36 +56,60 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     // Listen for user edit/delete/update events for superadmin notification
     if (this.isSuperAdmin()) {
-      this.subscription.add(this.socketService.onStudentCreated().subscribe((data: any) => this.addUserNotif('Création', data)));
-      this.subscription.add(this.socketService.onStudentUpdated().subscribe((data: any) => this.addUserNotif('Modification', data)));
-      this.subscription.add(this.socketService.onStudentDeleted().subscribe((data: any) => this.addUserNotif('Suppression', data)));
+      this.subscription.add(this.socketService.onUserCreated().subscribe((data: any) => this.addUserNotif('Création utilisateur', data)));
+      this.subscription.add(this.socketService.onUserUpdated().subscribe((data: any) => this.addUserNotif('Modification utilisateur', data)));
+      this.subscription.add(this.socketService.onUserDeleted().subscribe((data: any) => this.addUserNotif('Suppression utilisateur', data)));
+      this.subscription.add(this.socketService.onUserApproved().subscribe((data: any) => this.addUserNotif('Approbation utilisateur', data)));
+      this.subscription.add(this.socketService.onUserRejected().subscribe((data: any) => this.addUserNotif('Rejet utilisateur', data)));
     }
   }
 
   addUserNotif(action: string, data: any) {
     this.userNotifCount++;
-    // Try to extract user info from data (backend should send 'by', 'user', or similar)
+    // Extract user info from the new data structure
     let user = 'Inconnu';
+    let performedBy = 'Système';
+
     if (data) {
-      user = data.by || data.user || data.username || data.email || 'Inconnu';
+      // Get the user who performed the action
+      if (data.updatedBy) {
+        performedBy = `${data.updatedBy.nom} ${data.updatedBy.prenom}`.trim() || data.updatedBy.role || 'Utilisateur';
+      } else if (data.deletedBy) {
+        performedBy = `${data.deletedBy.nom} ${data.deletedBy.prenom}`.trim() || data.deletedBy.role || 'Utilisateur';
+      }
+
+      // Get the affected user info
+      if (data.user) {
+        user = `${data.user.nom} ${data.user.prenom || ''}`.trim() || data.user.mail || data.user.role || 'Utilisateur';
+      }
     }
-    // Try to extract a summary for details
+
+    // Create a meaningful summary
     let summary = '';
-    if (data && data.student) {
-      summary = data.student.nom ? `${data.student.nom} ${data.student.prenom || ''}` : JSON.stringify(data.student);
-    } else if (data && data.name) {
-      summary = data.name;
-    } else if (data && typeof data === 'string') {
-      summary = data;
-    } else {
-      summary = JSON.stringify(data);
+    if (action.includes('Création')) {
+      summary = `Nouveau compte: ${user}`;
+    } else if (action.includes('Modification')) {
+      if (data.changes && Object.keys(data.changes).length > 0) {
+        const changedFields = Object.keys(data.changes).join(', ');
+        summary = `${user} - Champs modifiés: ${changedFields}`;
+      } else {
+        summary = `Modifications sur: ${user}`;
+      }
+    } else if (action.includes('Suppression')) {
+      summary = `Compte supprimé: ${user}`;
+    } else if (action.includes('Approbation')) {
+      summary = `Compte approuvé: ${user}`;
+    } else if (action.includes('Rejet')) {
+      summary = `Compte rejeté: ${user}${data.reason ? ` - Raison: ${data.reason}` : ''}`;
     }
+
     this.userNotifDetails.unshift({
       action,
-      user,
+      user: performedBy,
       time: new Date(),
       details: summary
     });
+
     // Keep only last 10 notifications
     if (this.userNotifDetails.length > 10) {
       this.userNotifDetails = this.userNotifDetails.slice(0, 10);

@@ -4,27 +4,14 @@
   "description": "gestion des etudiants",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
     "dev": "nodemon index.js",
-    "db:seed:all": "node ./sample-data/seed.js",
     "db:diagnose": "node ./scripts/diagnoseDb.js",
     "db:restore": "node ./scripts/restoreStudents.js",
     "db:seed": "node ./scripts/seedStudents.js",
-    "db:dedupe:dry": "node ./clearDuplicates.js --dry-run",
-    "db:dedupe": "node ./clearDuplicates.js --confirm",
     "user:create": "node ./scripts/createUser.js",
     "user:super-admin": "node ./scripts/createSuperAdmin.js",
     "db:list": "node ./scripts/listAllDbs.js",
     "users:import": "node ./scripts/importUsers.js"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "transform": {
-      "^.+\\.js$": "babel-jest"
-    },
-    "setupFilesAfterEnv": [
-      "./test/setup.js"
-    ]
   },
   "author": "chakib",
   "type": "module",
@@ -38,12 +25,10 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
     "helmet": "^8.1.0",
-    "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.0",
     "openai": "^6.5.0",
-    "socket.io": "^4.8.1",
-    "supertest": "^7.1.4"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",

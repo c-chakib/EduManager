@@ -1,6 +1,7 @@
 import User from "../modeles/user.js";
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken'; 
+import jwt from 'jsonwebtoken';
+import { io } from "../index.js"; 
 
 export async function registerUser(req, res, next) {
   const { nom, prenom, mail, password, role = 'user', adminCode, cin, telephone, telephoneMobile, adresse, ville, codePostal, pays = 'Maroc' } = req.body;
@@ -39,6 +40,20 @@ export async function registerUser(req, res, next) {
       contact 
     });
     await newUser.save();
+    
+    // Emit Socket.io event for real-time updates (for admin notifications)
+    io.emit('userCreated', {
+      user: {
+        id: newUser._id,
+        nom: newUser.nom,
+        prenom: newUser.prenom,
+        mail: newUser.mail,
+        role: newUser.role,
+        accountStatus: newUser.accountStatus
+      },
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userCreated event for user:', newUser._id);
     
     // All accounts are pending approval
     return res.status(201).json({ 
@@ -280,6 +295,26 @@ export async function updateUserById(req, res, next) {
       });
     }
 
+    // Emit Socket.io event for real-time updates
+    io.emit('userUpdated', {
+      user: {
+        id: updatedUser._id,
+        nom: updatedUser.nom,
+        prenom: updatedUser.prenom,
+        mail: updatedUser.mail,
+        role: updatedUser.role
+      },
+      updatedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      changes: updateData,
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userUpdated event for user:', updatedUser._id);
+
     res.status(200).json({
       success: true,
       data: updatedUser,
@@ -321,6 +356,25 @@ export async function deleteUserById(req, res, next) {
     }
 
     await User.findByIdAndDelete(id);
+
+    // Emit Socket.io event for real-time updates
+    io.emit('userDeleted', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role
+      },
+      deletedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userDeleted event for user:', user._id);
 
     res.status(200).json({
       success: true,
@@ -430,6 +484,26 @@ export async function approveUser(req, res, next) {
   user.auditLog = user.auditLog || [];
   user.auditLog.push({ action: 'approve', by: approverId, reason: 'Admin approval' });
   await user.save();
+
+  // Emit Socket.io event for real-time updates
+  io.emit('userApproved', {
+    user: {
+      id: user._id,
+      nom: user.nom,
+      prenom: user.prenom,
+      mail: user.mail,
+      role: user.role,
+      accountStatus: user.accountStatus
+    },
+    approvedBy: {
+      id: req.user?.userId,
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
+      role: req.user?.role
+    },
+    timestamp: new Date()
+  });
+  console.log('[Socket.io] Emitted userApproved event for user:', user._id);
     
     res.status(200).json({
       success: true,
@@ -470,6 +544,27 @@ export async function rejectUser(req, res, next) {
     user.auditLog = user.auditLog || [];
     user.auditLog.push({ action: 'reject', by: req.user.userId, reason });
     await user.save();
+
+    // Emit Socket.io event for real-time updates
+    io.emit('userRejected', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role,
+        accountStatus: user.accountStatus
+      },
+      rejectedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      reason: reason || 'Non spécifié',
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userRejected event for user:', user._id);
     
     res.status(200).json({
       success: true,
