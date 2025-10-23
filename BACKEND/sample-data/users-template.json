@@ -1,0 +1,26 @@
+[
+  {
+    "nom": "Admin",
+    "prenom": "Super",
+    "email": "admin@example.com",
+    "password": "$2b$10$YourHashedPasswordHere1",
+    "role": "admin",
+    "createdAt": "2024-09-01T10:00:00.000Z"
+  },
+  {
+    "nom": "Utilisateur",
+    "prenom": "Test",
+    "email": "user@example.com",
+    "password": "$2b$10$YourHashedPasswordHere2",
+    "role": "user",
+    "createdAt": "2024-09-02T10:00:00.000Z"
+  },
+  {
+    "nom": "Dupont",
+    "prenom": "Marie",
+    "email": "marie.dupont@example.com",
+    "password": "$2b$10$YourHashedPasswordHere3",
+    "role": "user",
+    "createdAt": "2024-09-03T10:00:00.000Z"
+  }
+]

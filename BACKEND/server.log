@@ -1,0 +1,13 @@
+[dotenv@17.2.3] injecting env (7) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+🔍 Debug - OpenRouter API Key present: true Length: 73
+✅ OpenRouter AI initialized successfully
+Server is running on port 3000
+Database connected successfully -> 127.0.0.1:27017/etudiants
+Demo mode detected - skipping authentication
+::1 - - [20/Oct/2025:12:08:53 +0000] "GET /etudiants?isDemo=true&page=1&limit=5 HTTP/1.1" 200 40 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.4768"
+Demo mode detected - skipping authentication
+::1 - - [20/Oct/2025:12:09:05 +0000] "GET /etudiants?isDemo=true&page=1&limit=100 HTTP/1.1" 200 42 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.4768"
+Demo mode detected - skipping authentication
+::1 - - [20/Oct/2025:12:10:49 +0000] "GET /etudiants?isDemo=true&page=1&limit=100 HTTP/1.1" 200 42 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.4768"
+Demo mode detected - skipping authentication
+::1 - - [20/Oct/2025:12:11:30 +0000] "GET /etudiants?isDemo=true&page=1&limit=100 HTTP/1.1" 200 42 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.4768"
