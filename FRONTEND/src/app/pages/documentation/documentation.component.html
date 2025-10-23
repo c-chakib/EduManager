@@ -1,0 +1,43 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="breadcrumb">
+  <app-button variant="ghost" icon="pi pi-home" routerLink="/">Accueil</app-button>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Documentation</span>
+      </div>
+      <h1 class="page-title">
+        <i class="pi pi-book"></i>
+        Documentation
+      </h1>
+      <p class="page-description">
+        Tout ce que vous devez savoir pour utiliser EduManager efficacement
+      </p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="content-grid">
+      <div class="section-card" *ngFor="let section of sections">
+        <div class="card-icon">
+          <i [class]="section.icon"></i>
+        </div>
+        <h2 class="card-title">{{section.title}}</h2>
+        <p class="card-content">{{section.content}}</p>
+        <app-button variant="ghost" iconRight="pi pi-arrow-right" (clicked)="goToSection(section)">
+          En savoir plus
+        </app-button>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="quick-links-section">
+      <h2 class="section-title">Liens Rapides</h2>
+      <div class="links-grid">
+        <app-button variant="ghost" icon="pi pi-book" routerLink="/guide">Guide d'utilisation</app-button>
+        <app-button variant="ghost" icon="pi pi-question" routerLink="/faq">FAQ</app-button>
+        <app-button variant="ghost" icon="pi pi-headset" routerLink="/support">Support</app-button>
+      </div>
+    </div>
+  </div>
+</div>

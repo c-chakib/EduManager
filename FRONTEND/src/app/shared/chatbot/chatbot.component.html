@@ -1,0 +1,100 @@
+<!-- Chat Button (Floating) -->
+<button class="chat-toggle-btn" (click)="toggleChat()" [class.active]="isOpen">
+  <i class="fas fa-comments" *ngIf="!isOpen"></i>
+  <i class="fas fa-times" *ngIf="isOpen"></i>
+  <span class="chat-badge">1</span>
+</button>
+
+<!-- Chat Window -->
+<div class="chat-window" [class.open]="isOpen" [class.minimized]="isMinimized">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="bot-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="bot-info">
+        <h3 class="bot-name">Assistant EduManager</h3>
+        <p class="bot-status">
+          <span class="status-dot"></span>
+          En ligne
+        </p>
+      </div>
+    </div>
+    <div class="chat-actions">
+      <button class="chat-action-btn" (click)="minimizeChat()" title="Minimiser">
+        <i class="fas fa-minus"></i>
+      </button>
+      <button class="chat-action-btn" (click)="closeChat()" title="Fermer">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Body -->
+  <div class="chat-body" *ngIf="!isMinimized">
+    <!-- Messages -->
+    <div class="chat-messages">
+      <div *ngFor="let message of messages; let isLast = last" 
+           class="message-wrapper"
+           [class.user-message]="!message.isBot"
+           [class.bot-message]="message.isBot">
+        <div class="message-avatar" *ngIf="message.isBot">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            <p [innerHTML]="message.text | newlineToBr"></p>
+          </div>
+          <span class="message-time">{{message.timestamp | date:'HH:mm'}}</span>
+          
+          <!-- Clickable Suggestions (only show for last bot message) -->
+          <div class="message-suggestions" *ngIf="message.isBot && message.suggestions && isLast && !isTyping">
+            <div class="suggestions-grid">
+              <button *ngFor="let suggestion of message.suggestions" 
+                      class="suggestion-btn"
+                      (click)="sendQuickReply(suggestion)">
+                {{suggestion.text}}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="message-avatar" *ngIf="!message.isBot">
+          <i class="fas fa-user"></i>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="message-wrapper bot-message" *ngIf="isTyping">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Chat Input -->
+  <div class="chat-input" *ngIf="!isMinimized">
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        [(ngModel)]="userInput"
+        (keypress)="onKeyPress($event)"
+        placeholder="Tapez votre message..."
+        class="chat-input-field"
+      >
+      <button class="send-btn" (click)="sendMessage()" [disabled]="!userInput.trim()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+    <p class="input-hint">Appuyez sur Entrée pour envoyer</p>
+  </div>
+</div>

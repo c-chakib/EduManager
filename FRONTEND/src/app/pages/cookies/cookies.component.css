@@ -1,0 +1,275 @@
+/* Import shared page styles */
+@import '../documentation/documentation.component.css';
+
+/* Cookies Intro */
+.cookies-intro {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #2563eb;
+}
+
+.cookies-intro p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Cookie Types */
+.cookie-types {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.cookie-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.cookie-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.1);
+}
+
+.cookie-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.cookie-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cookie-icon i {
+  font-size: 1.75rem;
+  color: white;
+}
+
+.cookie-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cookie-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.cookie-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #64748b;
+  width: fit-content;
+}
+
+.cookie-badge.required {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+}
+
+.cookie-description {
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.cookie-examples {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.cookie-examples strong {
+  color: #0f172a;
+}
+
+/* Cookie Preferences */
+.cookie-preferences {
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 3rem;
+}
+
+.preferences-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.preference-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.preference-item:hover {
+  background: #f1f5f9;
+}
+
+.preference-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.preference-header i {
+  font-size: 1.25rem;
+  color: #2563eb;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.4s;
+  border-radius: 30px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+.switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switch.disabled .slider {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+/* Preference Actions */
+.preference-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.preference-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.btn-accept {
+  background: #10b981;
+  color: white;
+}
+
+.btn-accept:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-reject {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-reject:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .preference-item {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .preference-actions {
+    flex-direction: column;
+  }
+
+  .preference-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

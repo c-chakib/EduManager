@@ -1,0 +1,15 @@
+/* Import shared page styles */
+@import '../documentation/documentation.component.css';
+
+/* Step Number Badge */
+.step-number {
+  display: inline-block;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}

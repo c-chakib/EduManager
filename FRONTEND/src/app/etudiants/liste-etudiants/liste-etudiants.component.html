@@ -1,0 +1,425 @@
+<section class="students" aria-labelledby="students-title">
+  <!-- Demo Mode Alert - Only show in demo mode -->
+  <app-alert *ngIf="router.url.includes('/demo/')" variant="info" title="👁️ Mode Découverte">
+    Vous consultez des données de démonstration. 
+    <a routerLink="/auth/register" style="text-decoration: underline; font-weight: bold; color: inherit;">Créez un compte gratuit</a> pour gérer vos propres étudiants ou 
+    <a routerLink="/auth/login" style="text-decoration: underline; font-weight: bold; color: inherit;">connectez-vous</a>.
+  </app-alert>
+
+  <!-- Header -->
+  <div class="header-section">
+  <h1 id="students-title">Liste des Étudiants</h1>
+
+    <div class="header-right">
+      <div class="counter">
+        <app-badge variant="info" size="lg">{{ pagedEtudiants.length }}</app-badge>
+        <span class="sep">/</span>
+  <app-badge variant="primary" size="lg">{{ totalCount }}</app-badge>
+      </div>
+
+      <app-button 
+        *ngIf="canEditStudents()"
+        variant="primary"
+        icon="pi pi-plus"
+        (clicked)="addNewStudent()">
+        Ajouter un étudiant
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" role="region" aria-label="Filtres">
+    <label class="field" aria-label="Recherche">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Rechercher des étudiants (nom, prénom, email)..."
+        aria-label="Rechercher des étudiants"
+      />
+      <button
+        *ngIf="searchControl.value"
+        type="button"
+        class="field__clear"
+        (click)="clearSearch()"
+        aria-label="Effacer la recherche"
+      >
+        ×
+      </button>
+    </label>
+
+      <label class="field matiere-filter" [class.open]="showMatiereDropdown" aria-label="Filtrer par matière">
+      <i class="pi pi-filter" aria-hidden="true"></i>
+      <div class="multi-select-wrapper">
+        <button type="button" class="multi-select-toggle" (click)="toggleMatiereDropdown()">
+          <span *ngIf="selectedMatieres.length === 0">Toutes les matières</span>
+          <span *ngIf="selectedMatieres.length === 1">{{ selectedMatieres[0] }}</span>
+          <span *ngIf="selectedMatieres.length > 1">{{ selectedMatieres.length }} matières sélectionnées</span>
+          <i class="pi pi-chevron-down"></i>
+        </button>
+        <div class="multi-select-dropdown" *ngIf="showMatiereDropdown">
+          <div class="multi-select-option" *ngFor="let m of matieresDisponibles">
+            <label>
+              <input 
+                type="checkbox" 
+                [checked]="selectedMatieres.includes(m)"
+                (change)="toggleMatiere(m)"
+              />
+              <span>{{ m }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </label>
+
+    <label class="field" aria-label="Tri">
+      <i class="pi pi-sort-alt" aria-hidden="true"></i>
+      <select name="sortBy" [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="nom_asc">Nom (A→Z)</option>
+        <option value="nom_desc">Nom (Z→A)</option>
+        <option value="prenom_asc">Prénom (A→Z)</option>
+        <option value="prenom_desc">Prénom (Z→A)</option>
+        <option value="id_asc">ID (1→9)</option>
+        <option value="id_desc">ID (9→1)</option>
+        <option value="date_desc">Date (récent → ancien)</option>
+        <option value="date_asc">Date (ancien → récent)</option>
+      </select>
+    </label>
+
+    <!-- Clear Filters button only when filters/search are active -->
+    <app-button 
+      *ngIf="searchTerm || selectedMatieres.length > 0 || sortBy !== 'nom_asc'"
+      variant="ghost"
+      icon="pi pi-replay"
+      (clicked)="clearFilters()">
+      Réinitialiser
+    </app-button>
+  </div>
+
+  <!-- Active filter chips -->
+  <div class="active-filters" *ngIf="(searchTerm && searchTerm.length) || selectedMatieres.length">
+    <span class="label">Filtres actifs:</span>
+    <ng-container *ngIf="searchTerm">
+      <app-badge variant="info" size="md">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        {{ searchTerm }}
+        <button type="button" class="chip-close" (click)="clearSearch()" aria-label="Retirer la recherche">×</button>
+      </app-badge>
+    </ng-container>
+    <ng-container *ngFor="let m of selectedMatieres">
+      <app-badge variant="secondary" size="md">
+        <i class="pi pi-book" aria-hidden="true"></i>
+        {{ m }}
+        <button type="button" class="chip-close" (click)="toggleMatiere(m)" aria-label="Retirer la matière">×</button>
+      </app-badge>
+    </ng-container>
+    <app-button variant="ghost" size="sm" icon="pi pi-times" (clicked)="clearFilters()">Tout effacer</app-button>
+  </div>
+
+  
+
+  <!-- Error -->
+  <app-alert 
+    *ngIf="error"
+    variant="error"
+    title="Erreur">
+    {{ error }}
+    <div class="mt-4">
+      <app-button 
+        variant="primary"
+        (clicked)="reload()">
+        Réessayer
+      </app-button>
+    </div>
+  </app-alert>
+
+  <!-- Loading skeletons for student cards -->
+  <div *ngIf="loading && !error" class="students-grid">
+    <article class="student-card skeleton" *ngFor="let _ of getSkeletons()">
+      <div class="student-card__header">
+        <div class="student-card__avatar skeleton-avatar"></div>
+        <div class="student-card__info">
+          <div class="skeleton-text skeleton-name"></div>
+          <div class="skeleton-text skeleton-id"></div>
+          <div class="skeleton-text skeleton-email"></div>
+        </div>
+      </div>
+      <div class="student-card__content">
+        <div class="skeleton-text skeleton-subject"></div>
+        <div class="skeleton-text skeleton-date"></div>
+      </div>
+      <div class="student-card__actions">
+        <div class="skeleton-btn"></div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Enhanced Empty State with Dynamic Illustrations -->
+  <div *ngIf="!loading && !error && EtudiantsListe.length === 0" class="empty-state-wrapper">
+    <app-empty-state
+      icon="pi pi-users"
+      [title]="getEmptyStateTitle()"
+      [description]="getEmptyStateMessage()">
+      
+      <!-- Contextual illustrations based on filters -->
+      <div class="empty-illustration">
+        <img 
+          *ngIf="searchTerm && selectedMatieres.length === 0" 
+          src="https://illustrations.popsy.co/amber/searching.svg" 
+          alt="Illustration recherche" 
+          loading="lazy"
+          onerror="this.style.display='none'" />
+        <img 
+          *ngIf="!searchTerm && selectedMatieres.length > 0" 
+          src="https://illustrations.popsy.co/amber/filter.svg" 
+          alt="Illustration filtre" 
+          loading="lazy"
+          onerror="this.style.display='none'" />
+        <img 
+          *ngIf="!searchTerm && selectedMatieres.length === 0 && EtudiantsListe.length === 0" 
+          src="https://illustrations.popsy.co/amber/add-to-folder.svg" 
+          alt="Illustration vide" 
+          loading="lazy"
+          onerror="this.style.display='none'" />
+        <img 
+          *ngIf="searchTerm && selectedMatieres.length > 0" 
+          src="https://illustrations.popsy.co/amber/no-data.svg" 
+          alt="Illustration aucun résultat" 
+          loading="lazy"
+          onerror="this.style.display='none'" />
+      </div>
+
+      <!-- Contextual actions -->
+      <div class="empty-actions">
+        <app-button 
+          *ngIf="searchTerm || selectedMatieres.length > 0"
+          variant="primary"
+          icon="pi pi-replay"
+          (clicked)="clearFilters()">
+          Réinitialiser les filtres
+        </app-button>
+        <app-button 
+          *ngIf="canEditStudents()"
+          [variant]="EtudiantsListe.length === 0 ? 'primary' : 'secondary'"
+          icon="pi pi-plus"
+          (clicked)="addNewStudent()">
+          Ajouter un étudiant
+        </app-button>
+      </div>
+    </app-empty-state>
+  </div>
+
+  <!-- IMPROVED GRID -->
+  <form>
+  <div class="students-grid" *ngIf="!loading && !error && pagedEtudiants.length">
+      <!-- Enhanced Bulk Actions Bar with Select All -->
+      <div class="bulk-actions-bar" *ngIf="pagedEtudiants.length > 0">
+        <div class="bulk-select">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="selectAll" 
+              name="selectAll" 
+              (change)="toggleSelectAll()"
+              class="styled-checkbox"
+              aria-label="Sélectionner tous les étudiants de la page" />
+            <span class="checkbox-text">
+              <i class="pi pi-check-square" *ngIf="selectAll" aria-hidden="true"></i>
+              <i class="pi pi-square" *ngIf="!selectAll" aria-hidden="true"></i>
+              Tout sélectionner
+            </span>
+          </label>
+        </div>
+        
+        <!-- Selection Counter with Actions -->
+        <div class="bulk-info" *ngIf="selectedStudents.length > 0">
+          <app-badge variant="primary" size="lg">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            {{ selectedStudents.length }} étudiant{{ selectedStudents.length > 1 ? 's' : '' }} sélectionné{{ selectedStudents.length > 1 ? 's' : '' }}
+          </app-badge>
+          
+          <!-- Future bulk actions (disabled for now, shows preparation) -->
+          <div class="bulk-actions">
+            <app-button 
+              variant="ghost" 
+              size="sm"
+              icon="pi pi-download"
+              [disabled]="true"
+              title="Prochainement : Exporter la sélection">
+              Exporter
+            </app-button>
+            <app-button 
+              *ngIf="canEditStudents()"
+              variant="ghost" 
+              size="sm"
+              icon="pi pi-trash"
+              [disabled]="true"
+              title="Prochainement : Supprimer la sélection">
+              Supprimer
+            </app-button>
+          </div>
+        </div>
+      </div>
+      <article
+        class="student-card"
+        *ngFor="let etudiant of pagedEtudiants; trackBy: trackById"
+        tabindex="0"
+        (keyup.enter)="goToDetailsPage(etudiant.id!)"
+        [attr.aria-label]="'Voir détails de ' + etudiant.prenom + ' ' + etudiant.nom"
+        role="group"
+      >
+        <input type="checkbox" [(ngModel)]="etudiant.selected" name="selected_{{etudiant.id}}" (change)="toggleStudentSelection(etudiant)" class="student-select-checkbox" />
+      <!-- Header with Avatar and Basic Info -->
+      <div class="student-card__header">
+        <a
+          class="avatar-link"
+          [routerLink]="getDetailsRoute(etudiant.id!)"
+          [attr.aria-label]="'Ouvrir la fiche de ' + etudiant.prenom + ' ' + etudiant.nom"
+        >
+          <ng-container *ngIf="etudiant.photo && etudiant.photo !== 'Picture unavailable'; else initials">
+            <img
+              [src]="etudiant.photo"
+              [alt]="'Photo de ' + etudiant.prenom + ' ' + etudiant.nom"
+              class="student-card__avatar"
+              loading="lazy"
+              decoding="async"
+              (error)="$any($event).target.style.display='none'"
+            />
+          </ng-container>
+          <ng-template #initials>
+            <div class="student-card__avatar student-card__avatar--initials" aria-hidden="true">
+              {{ (etudiant.prenom[0] || '') + (etudiant.nom[0] || '') | uppercase }}
+            </div>
+          </ng-template>
+        </a>
+
+        <div class="student-card__info">
+          <h2 class="student-card__name">
+            {{ etudiant.prenom }} {{ etudiant.nom }}
+          </h2>
+          <p class="student-card__id">ID: {{ etudiant.id }}</p>
+          <p class="student-card__email">{{ etudiant.mail }}</p>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="student-card__content">
+        <!-- Subjects -->
+        <div class="student-card__subjects" *ngIf="etudiant.matieres?.length; else noSubjects">
+          <h3 class="subjects-title">
+            <i class="pi pi-book" aria-hidden="true"></i>
+            Matières ({{ etudiant.matieres.length }})
+          </h3>
+          <div class="subjects-list">
+            <app-badge 
+              variant="secondary"
+              *ngFor="let matiere of etudiant.matieres.slice(0, 3)" 
+              [title]="matiere">
+              {{ matiere }}
+            </app-badge>
+            <app-badge 
+              variant="info"
+              *ngIf="etudiant.matieres.length > 3"
+              [title]="etudiant.matieres.slice(3).join(', ')">
+              +{{ etudiant.matieres.length - 3 }}
+            </app-badge>
+          </div>
+        </div>
+        <ng-template #noSubjects>
+          <div class="student-card__subjects">
+            <h3 class="subjects-title">
+              <i class="pi pi-book" aria-hidden="true"></i>
+              Aucune matière
+            </h3>
+            <p class="no-subjects-text">Aucune matière assignée</p>
+          </div>
+        </ng-template>
+
+        <!-- Date -->
+        <div class="student-card__date" *ngIf="etudiant.createdAt">
+          <i class="pi pi-calendar" aria-hidden="true"></i>
+          <span>Ajouté le {{ etudiant.createdAt | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="student-card__actions" style="display: flex; gap: 0.5rem;">
+        <app-button 
+          variant="primary"
+          icon="pi pi-eye"
+          [routerLink]="getDetailsRoute(etudiant.id!)">
+          Voir détails
+        </app-button>
+        <app-button 
+          *ngIf="canEditStudents()"
+          variant="ghost"
+          icon="pi pi-pencil"
+          size="sm"
+          (clicked)="editStudent(etudiant)"
+          [ariaLabel]="'Modifier ' + etudiant.prenom + ' ' + etudiant.nom">
+        </app-button>
+        <app-button 
+          *ngIf="canEditStudents()"
+          variant="danger"
+          icon="pi pi-trash"
+          size="sm"
+          (clicked)="openDeleteConfirm(etudiant)"
+          [ariaLabel]="'Supprimer ' + etudiant.prenom + ' ' + etudiant.nom">
+        </app-button>
+      </div>
+    </article>
+  </div>
+
+  <!-- Pagination moderne -->
+  <nav *ngIf="!loading && !error && pagedEtudiants.length" class="pagination-bar" aria-label="Pagination">
+      <ul class="pagination-list" *ngIf="!isShowingAll">
+        <li>
+          <button type="button" class="pagination-btn" (click)="goToPage(pageIndex - 1)" [disabled]="pageIndex === 0" aria-label="Page précédente">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+        </li>
+        <ng-container *ngFor="let page of getPageNumbers(); let i = index">
+          <li *ngIf="isNumber(page)">
+            <button type="button" class="pagination-btn" [class.active]="$any(page) === pageIndex + 1" (click)="goToPage($any(page) - 1)" [attr.aria-label]="'Aller à la page ' + page">
+              {{ page }}
+            </button>
+          </li>
+          <li *ngIf="!isNumber(page)"><span class="pagination-ellipsis">…</span></li>
+        </ng-container>
+        <li>
+          <button type="button" class="pagination-btn" (click)="goToPage(pageIndex + 1)" [disabled]="(pageIndex + 1) >= totalPages" aria-label="Page suivante">
+            <i class="pi pi-chevron-right"></i>
+          </button>
+        </li>
+      </ul>
+      <div class="pagination-info">
+        <label for="pagesize" class="page-size-label">
+          <i class="pi pi-list" aria-hidden="true"></i>
+          Afficher :
+        </label>
+        <select id="pagesize" name="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)" class="page-size-select">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">
+            {{ s === 9999 ? 'Tout' : s + ' par page' }}
+          </option>
+        </select>
+        <span class="page-count">
+          {{ isShowingAll ? displayInfo : 'Page ' + (pageIndex + 1) + ' / ' + totalPages + ' • ' + displayInfo }}
+        </span>
+      </div>
+    </nav>
+  </form>
+
+  <!-- Confirmation Modal -->
+<div *ngIf="showDeleteConfirm" class="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40">
+  <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+    <h3 class="font-bold text-lg mb-2">Confirmer la suppression</h3>
+    <p class="mb-4">Êtes-vous sûr de vouloir supprimer <span class="font-semibold">{{ studentToDelete?.prenom }} {{ studentToDelete?.nom }}</span> ? Cette action est irréversible.</p>
+    <div class="flex gap-3 justify-end">
+      <button type="button" class="btn btn-secondary" (click)="showDeleteConfirm=false">Annuler</button>
+      <button type="button" class="btn btn-danger" (click)="confirmDeleteStudent()">Supprimer</button>
+    </div>
+  </div>
+</div>
+</section>
+

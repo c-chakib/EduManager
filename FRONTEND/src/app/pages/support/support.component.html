@@ -1,0 +1,91 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-content">
+      <nav class="breadcrumb">
+        <a routerLink="/" class="breadcrumb-link">
+          <i class="fas fa-home"></i> Accueil
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Support</span>
+      </nav>
+      <h1 class="page-title">
+        <i class="fas fa-life-ring"></i>
+        Support
+      </h1>
+      <p class="page-description">
+        Notre équipe est là pour vous aider. Contactez-nous par le moyen qui vous convient
+      </p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="contact-methods">
+      <div class="contact-card" *ngFor="let method of contactMethods">
+        <div class="contact-icon">
+          <i [class]="method.icon"></i>
+        </div>
+        <h3 class="contact-title">{{method.title}}</h3>
+        <p class="contact-info">{{method.info}}</p>
+        <p class="contact-description">{{method.description}}</p>
+        <a [href]="method.link" class="contact-button">Contacter</a>
+      </div>
+    </div>
+
+    <div class="support-form-section">
+      <h2 class="section-title">Envoyer une demande de support</h2>
+      <form class="support-form" (ngSubmit)="submitSupport()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nom complet *</label>
+            <input type="text" id="name" [(ngModel)]="supportForm.name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" [(ngModel)]="supportForm.email" name="email" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subject">Sujet *</label>
+            <input type="text" id="subject" [(ngModel)]="supportForm.subject" name="subject" required>
+          </div>
+          <div class="form-group">
+            <label for="priority">Priorité</label>
+            <select id="priority" [(ngModel)]="supportForm.priority" name="priority">
+              <option value="low">Basse</option>
+              <option value="normal">Normale</option>
+              <option value="high">Haute</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="message">Message *</label>
+          <textarea id="message" [(ngModel)]="supportForm.message" name="message" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="submit-button">
+          <i class="fas fa-paper-plane"></i>
+          Envoyer la demande
+        </button>
+      </form>
+    </div>
+
+    <div class="quick-links-section">
+      <h2 class="section-title">Ressources utiles</h2>
+      <div class="links-grid">
+        <a routerLink="/documentation" class="quick-link">
+          <i class="fas fa-book"></i>
+          <span>Documentation</span>
+        </a>
+        <a routerLink="/guide" class="quick-link">
+          <i class="fas fa-book-open"></i>
+          <span>Guide d'utilisation</span>
+        </a>
+        <a routerLink="/faq" class="quick-link">
+          <i class="fas fa-question-circle"></i>
+          <span>FAQ</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

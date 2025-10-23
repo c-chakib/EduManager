@@ -1,0 +1,640 @@
+<div class="profile-container">
+  <app-alert *ngIf="alertMessage" [variant]="alertVariant" (closed)="alertMessage = null">
+    {{ alertMessage }}
+  </app-alert>
+  <app-card *ngIf="user" variant="elevated" padding="lg">
+    <!-- Header du profil -->
+    <div class="profile-header">
+      <div class="avatar-section">
+        <div class="avatar" [style.background-color]="getRoleColor()">
+          <span class="avatar-icon">{{ getRoleIcon() }}</span>
+        </div>
+        <div class="user-basic-info">
+          <h1 class="user-full-name">{{ user.prenom }} {{ user.nom }}</h1>
+          <app-role-badge [role]="user.role"></app-role-badge>
+        </div>
+      </div>
+      
+      <div class="action-buttons" style="display: flex; gap: 1rem;">
+        <app-button 
+          *ngIf="!isEditing && (authService.role === 'admin' || (user && user.mail === authService.getCurrentUser()?.mail))"
+          variant="primary"
+          icon="pi pi-pencil"
+          (clicked)="enableEdit()">
+          Modifier
+        </app-button>
+        <!-- Quick access to password change -->
+        <app-button 
+          *ngIf="!isEditing"
+          variant="ghost"
+          icon="pi pi-key"
+          (clicked)="openPasswordChange()">
+          Changer le mot de passe
+        </app-button>
+        <div *ngIf="isEditing" class="edit-buttons" style="display: flex; gap: 1rem;">
+          <app-button 
+            variant="success"
+            [icon]="isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+            [disabled]="isLoading"
+            (clicked)="saveProfile()">
+            {{ isLoading ? 'Enregistrement...' : 'Sauvegarder' }}
+          </app-button>
+          <app-button 
+            variant="ghost"
+            icon="pi pi-times"
+            [disabled]="isLoading"
+            (clicked)="cancelEdit()">
+            Annuler
+          </app-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations détaillées -->
+    <div class="profile-body">
+      <div class="info-grid">
+        
+        <!-- Informations personnelles -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">👤</i>
+            Informations personnelles
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Prénom</label>
+            <div class="info-value" *ngIf="!isEditing">{{ user.prenom }}</div>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.prenom"
+              [disabled]="isLoading"
+              placeholder="Prénom (ex: Yassine)"
+              required
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Nom</label>
+            <div class="info-value" *ngIf="!isEditing">{{ user.nom }}</div>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.nom"
+              [disabled]="isLoading"
+              placeholder="Nom de famille (ex: El Amrani)"
+              required
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Email</label>
+            <div class="info-value email" *ngIf="!isEditing">
+              <i class="email-icon">📧</i>
+              {{ user.mail }}
+            </div>
+            <input 
+              *ngIf="isEditing" 
+              type="email" 
+              class="info-input" 
+              [(ngModel)]="user.mail"
+              [disabled]="isLoading"
+              placeholder="exemple@email.com"
+              required
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Date de naissance</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.dateNaissance ? (user.dateNaissance | date: 'dd/MM/yyyy') : 'Non renseignée' }}
+              <span *ngIf="user.age" class="text-muted"> ({{ user.age }} ans)</span>
+            </div>
+            <div *ngIf="isEditing" class="modern-date-input">
+              <input 
+                type="date" 
+                class="info-input date-picker" 
+                [(ngModel)]="user.dateNaissance"
+                [max]="getMaxDate()"
+                [disabled]="isLoading"
+                placeholder="jj/mm/aaaa"
+              >
+              <span class="date-icon">📅</span>
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Genre</label>
+            <div class="info-value" *ngIf="!isEditing">{{ getGenreLabel(user.genre) }}</div>
+            <select 
+              *ngIf="isEditing" 
+              class="info-input" 
+              [(ngModel)]="user.genre"
+            >
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+              <option value="Autre">Autre</option>
+              <option value="Non spécifié">Non spécifié</option>
+            </select>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Bio</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.bio || 'Aucune biographie' }}
+            </div>
+            <textarea 
+              *ngIf="isEditing" 
+              class="info-input" 
+              [(ngModel)]="user.bio"
+              rows="3"
+              maxlength="500"
+              placeholder="Parlez-nous de vous... (ex: Étudiant en informatique à Casablanca)"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Informations de contact -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">📞</i>
+            Informations de contact
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Téléphone</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.telephone || 'Non renseigné' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="tel" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.telephone"
+              placeholder="+212 5 22 22 22 22"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Mobile</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.telephoneMobile || 'Non renseigné' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="tel" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.telephoneMobile"
+              placeholder="+212 6 12 34 56 78"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Adresse</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.adresse || 'Non renseignée' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.adresse"
+              placeholder="123 Rue Al Qods, Casablanca"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Ville</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.ville || 'Non renseignée' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.ville"
+              placeholder="Casablanca"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Code Postal</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.codePostal || 'Non renseigné' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.codePostal"
+              placeholder="20000"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Pays</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.contact?.pays || 'Maroc' }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.contact" 
+              type="text" 
+              class="info-input" 
+              [(ngModel)]="user.contact!.pays"
+              placeholder="Maroc"
+            >
+          </div>
+        </div>
+
+        <!-- Informations du compte -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">🔐</i>
+            Informations du compte
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Rôle</label>
+            <div class="info-value role">
+              <span class="role-indicator" [style.background-color]="getRoleColor()">
+                {{ getRoleIcon() }}
+              </span>
+              {{ getRoleLabel(user.role) }}
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Statut</label>
+            <div class="info-value">
+              <span [class]="'status-badge ' + (user.isActive ? 'status-active' : 'status-inactive')">
+                {{ user.isActive ? '✓ Actif' : '✗ Inactif' }}
+              </span>
+              <span [class]="'status-badge ' + (user.isVerified ? 'status-verified' : 'status-unverified')" style="margin-left: 0.5rem;">
+                {{ user.isVerified ? '✓ Vérifié' : '⚠ Non vérifié' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Membre depuis</label>
+            <div class="info-value date">
+              <i class="date-icon">📅</i>
+              {{ getCreationDate() }}
+            </div>
+          </div>
+
+          <div class="info-group" *ngIf="user.lastLogin">
+            <label class="info-label">Dernière connexion</label>
+            <div class="info-value date">
+              <i class="date-icon">🕐</i>
+              {{ user.lastLogin | date: 'dd/MM/yyyy à HH:mm' }}
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Identifiant</label>
+            <div class="info-value id">
+              <i class="id-icon">#</i>
+              {{ user._id }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Préférences -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">⚙️</i>
+            Préférences
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Thème</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ getThemeLabel(user.preferences?.theme) }}
+            </div>
+            <select 
+              *ngIf="isEditing && user.preferences" 
+              class="info-input" 
+              [(ngModel)]="user.preferences!.theme"
+            >
+              <option value="light">Clair</option>
+              <option value="dark">Sombre</option>
+              <option value="auto">Automatique</option>
+            </select>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Langue</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ getLanguageLabel(user.preferences?.language) }}
+            </div>
+            <select 
+              *ngIf="isEditing && user.preferences" 
+              class="info-input" 
+              [(ngModel)]="user.preferences!.language"
+            >
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+            </select>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Éléments par page</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.preferences?.itemsPerPage || 12 }}
+            </div>
+            <input 
+              *ngIf="isEditing && user.preferences" 
+              type="number" 
+              class="info-input" 
+              [(ngModel)]="user.preferences!.itemsPerPage"
+              min="8"
+              max="100"
+            >
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Notifications Email</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.preferences?.notifications?.email ? '✓ Activées' : '✗ Désactivées' }}
+            </div>
+            <label *ngIf="isEditing && user.preferences" class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="user.preferences!.notifications!.email"
+              >
+              Recevoir les notifications par email
+            </label>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Notifications Push</label>
+            <div class="info-value" *ngIf="!isEditing">
+              {{ user.preferences?.notifications?.push ? '✓ Activées' : '✗ Désactivées' }}
+            </div>
+            <label *ngIf="isEditing && user.preferences" class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="user.preferences!.notifications!.push"
+              >
+              Recevoir les notifications push
+            </label>
+          </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">📊</i>
+            Dashboard
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Total connexions</label>
+            <div class="info-value">
+              <strong>{{ user.stats?.totalLogins || 0 }}</strong>
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Étudiants créés</label>
+            <div class="info-value">
+              <strong style="color: #10b981;">{{ user.stats?.studentsCreated || 0 }}</strong>
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Étudiants modifiés</label>
+            <div class="info-value">
+              <strong style="color: #3b82f6;">{{ user.stats?.studentsModified || 0 }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sécurité - Password Change -->
+        <div class="info-section" id="security-section">
+          <h3 class="section-title">
+            <i class="section-icon">🔐</i>
+            Sécurité
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Mot de passe</label>
+            <div class="info-value">
+              <app-button 
+                variant="ghost"
+                size="sm"
+                icon="pi pi-key"
+                (clicked)="togglePasswordChange()">
+                {{ showPasswordChange ? 'Annuler' : 'Changer le mot de passe' }}
+              </app-button>
+            </div>
+          </div>
+
+          <!-- Password Change Form -->
+          <div *ngIf="showPasswordChange" class="password-change-form">
+            <div class="info-group">
+              <label class="info-label">Mot de passe actuel</label>
+              <input 
+                type="password" 
+                class="info-input" 
+                [(ngModel)]="currentPassword"
+                [disabled]="passwordLoading"
+                placeholder="Votre mot de passe actuel"
+                required
+              >
+            </div>
+
+            <div class="info-group">
+              <label class="info-label">Nouveau mot de passe</label>
+              <input 
+                type="password" 
+                class="info-input" 
+                [(ngModel)]="newPassword"
+                [disabled]="passwordLoading"
+                placeholder="Minimum 6 caractères"
+                minlength="6"
+                required
+              >
+            </div>
+
+            <div class="info-group">
+              <label class="info-label">Confirmer le nouveau mot de passe</label>
+              <input 
+                type="password" 
+                class="info-input" 
+                [(ngModel)]="confirmPassword"
+                [disabled]="passwordLoading"
+                placeholder="Retapez le nouveau mot de passe"
+                required
+              >
+            </div>
+
+            <div class="password-actions">
+              <app-button 
+                variant="success"
+                size="sm"
+                [icon]="passwordLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+                [disabled]="passwordLoading"
+                (clicked)="changePassword()">
+                {{ passwordLoading ? 'Modification...' : 'Valider' }}
+              </app-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions du profil -->
+    <div class="profile-footer">
+      <div class="danger-zone">
+        <h4 class="danger-title">
+          <i class="pi pi-exclamation-triangle danger-icon"></i>
+          Zone dangereuse
+        </h4>
+        <p class="danger-description">
+          Cette action vous déconnectera de votre session actuelle.
+        </p>
+        <app-button 
+          variant="danger"
+          icon="pi pi-sign-out"
+          (clicked)="logout()">
+          Se déconnecter
+        </app-button>
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Demo Profile for Guest Users -->
+  <app-card *ngIf="!user" variant="elevated" padding="lg">
+    <div class="profile-header">
+      <div class="avatar-section">
+        <div class="avatar" style="background-color: #6b7280;">
+          <span class="avatar-icon">👤</span>
+        </div>
+        <div class="user-basic-info">
+          <h1 class="user-full-name">Visiteur Invité</h1>
+          <div class="role-badge" style="background-color: #6b7280;">
+            👁️ Mode Découverte
+          </div>
+        </div>
+      </div>
+      
+      <div class="action-buttons" style="display: flex; gap: 1rem;">
+        <app-button 
+          variant="primary"
+          icon="pi pi-user-plus"
+          routerLink="/auth/register">
+          Créer un compte
+        </app-button>
+        <app-button 
+          variant="ghost"
+          icon="pi pi-sign-in"
+          routerLink="/auth/login">
+          Se connecter
+        </app-button>
+      </div>
+    </div>
+
+    <div class="profile-body">
+      <div class="info-grid">
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">👤</i>
+            Profil de démonstration
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Prénom</label>
+            <div class="info-value">Invité</div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Nom</label>
+            <div class="info-value">Utilisateur</div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Email</label>
+            <div class="info-value email">
+              <i class="email-icon">📧</i>
+              demo&#64;edumanager.com
+            </div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="section-icon">🔐</i>
+            Informations du compte
+          </h3>
+          
+          <div class="info-group">
+            <label class="info-label">Rôle</label>
+            <div class="info-value role">
+              <span class="role-indicator" style="background-color: #6b7280;">
+                👁️
+              </span>
+              Mode Découverte
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Statut</label>
+            <div class="info-value date">
+              <i class="date-icon">📅</i>
+              Non connecté
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label class="info-label">Accès</label>
+            <div class="info-value id">
+              <i class="id-icon">#</i>
+              Limité
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-footer">
+      <app-alert variant="info" title="Mode Découverte Activé">
+        Vous naviguez en mode invité. Créez un compte pour accéder à toutes les fonctionnalités de gestion académique.
+      </app-alert>
+      
+      <div class="danger-zone" style="margin-top: 1.5rem;">
+        <h4 class="danger-title">
+          <i class="pi pi-info-circle danger-icon"></i>
+          Fonctionnalités disponibles en mode invité
+        </h4>
+        <p class="danger-description">
+          • Consulter la liste des étudiants de démonstration<br>
+          • Explorer l'interface utilisateur<br>
+          • Voir le dashboard de démonstration<br>
+          <br>
+          Pour modifier, ajouter ou supprimer des étudiants, vous devez créer un compte.
+        </p>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <app-button 
+            variant="success"
+            icon="pi pi-user-plus"
+            routerLink="/auth/register">
+            Créer un compte gratuit
+          </app-button>
+          <app-button 
+            variant="primary"
+            icon="pi pi-sign-in"
+            routerLink="/auth/login">
+            J'ai déjà un compte
+          </app-button>
+        </div>
+      </div>
+    </div>
+  </app-card>
+</div>  
+ 
+ 

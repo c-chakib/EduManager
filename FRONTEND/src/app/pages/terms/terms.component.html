@@ -1,0 +1,55 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-content">
+      <nav class="breadcrumb">
+        <a routerLink="/" class="breadcrumb-link">
+          <i class="fas fa-home"></i> Accueil
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">CGU</span>
+      </nav>
+      <h1 class="page-title">
+        <i class="fas fa-file-contract"></i>
+        Conditions générales d'utilisation
+      </h1>
+      <p class="page-description">
+        Veuillez lire attentivement ces conditions avant d'utiliser EduManager
+      </p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="terms-intro">
+      <p><strong>Dernière mise à jour :</strong> {{currentDate | date: 'dd/MM/yyyy'}}</p>
+      <p>Ces Conditions Générales d'Utilisation (CGU) régissent votre accès et utilisation de la plateforme EduManager. En utilisant nos services, vous acceptez d'être lié par ces conditions.</p>
+    </div>
+
+    <div class="content-grid">
+      <div class="section-card" *ngFor="let section of sections">
+        <div class="card-icon">
+          <i [class]="section.icon"></i>
+        </div>
+        <h3 class="card-title">{{section.title}}</h3>
+        <p class="card-content">{{section.content}}</p>
+      </div>
+    </div>
+
+    <div class="quick-links-section">
+      <h2 class="section-title">Documents associés</h2>
+      <div class="links-grid">
+        <a routerLink="/privacy" class="quick-link">
+          <i class="fas fa-shield-alt"></i>
+          <span>Politique de confidentialité</span>
+        </a>
+        <a routerLink="/cookies" class="quick-link">
+          <i class="fas fa-cookie-bite"></i>
+          <span>Politique de cookies</span>
+        </a>
+        <a routerLink="/support" class="quick-link">
+          <i class="fas fa-life-ring"></i>
+          <span>Contacter le support</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-content">
+      <nav class="breadcrumb">
+        <a routerLink="/" class="breadcrumb-link">
+          <i class="fas fa-home"></i> Accueil
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Cookies</span>
+      </nav>
+      <h1 class="page-title">
+        <i class="fas fa-cookie-bite"></i>
+        Politique de cookies
+      </h1>
+      <p class="page-description">
+        Gérez vos préférences de cookies et découvrez comment nous les utilisons
+      </p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="cookies-intro">
+      <p>Les cookies sont de petits fichiers texte stockés sur votre appareil lorsque vous visitez notre site. Ils nous aident à améliorer votre expérience et à comprendre comment vous utilisez notre plateforme.</p>
+    </div>
+
+    <div class="cookie-types">
+      <div class="cookie-card" *ngFor="let type of cookieTypes">
+        <div class="cookie-header">
+          <div class="cookie-icon">
+            <i [class]="type.icon"></i>
+          </div>
+          <div class="cookie-info">
+            <h3 class="cookie-title">{{type.title}}</h3>
+            <span class="cookie-badge" [class.required]="type.required">
+              {{type.required ? 'Obligatoire' : 'Optionnel'}}
+            </span>
+          </div>
+        </div>
+        <p class="cookie-description">{{type.description}}</p>
+        <p class="cookie-examples"><strong>Exemples :</strong> {{type.examples}}</p>
+      </div>
+    </div>
+
+    <div class="cookie-preferences">
+      <h2 class="section-title">Gérer vos préférences</h2>
+      <div class="preferences-form">
+        <div class="preference-item">
+          <div class="preference-header">
+            <i class="fas fa-cookie"></i>
+            <span>Cookies essentiels</span>
+          </div>
+          <label class="switch disabled">
+            <input type="checkbox" [(ngModel)]="cookieSettings.essential" disabled>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <div class="preference-header">
+            <i class="fas fa-chart-bar"></i>
+            <span>Cookies analytiques</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="cookieSettings.analytics">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="preference-item">
+          <div class="preference-header">
+            <i class="fas fa-cog"></i>
+            <span>Cookies fonctionnels</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="cookieSettings.functional">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="preference-actions">
+        <button (click)="savePreferences()" class="btn-save">
+          <i class="fas fa-save"></i> Enregistrer les préférences
+        </button>
+        <button (click)="acceptAll()" class="btn-accept">
+          <i class="fas fa-check-circle"></i> Tout accepter
+        </button>
+        <button (click)="rejectAll()" class="btn-reject">
+          <i class="fas fa-times-circle"></i> Tout refuser
+        </button>
+      </div>
+    </div>
+
+    <div class="quick-links-section">
+      <h2 class="section-title">En savoir plus</h2>
+      <div class="links-grid">
+        <a routerLink="/privacy" class="quick-link">
+          <i class="fas fa-shield-alt"></i>
+          <span>Politique de confidentialité</span>
+        </a>
+        <a routerLink="/terms" class="quick-link">
+          <i class="fas fa-file-contract"></i>
+          <span>Conditions d'utilisation</span>
+        </a>
+        <a routerLink="/support" class="quick-link">
+          <i class="fas fa-life-ring"></i>
+          <span>Contacter le support</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

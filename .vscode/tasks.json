@@ -1,0 +1,35 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Angular build (frontend)",
+			"type": "shell",
+			"command": "npm run build --prefix FRONTEND/etudiants",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Backend start (dev quick check)",
+			"type": "shell",
+			"command": "npm run start --prefix BACK END",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Reseed chatbot data (curl)",
+			"type": "shell",
+			"command": "powershell -Command \"try { $resp = Invoke-WebRequest -UseBasicParsing -Uri http://localhost:3000/chatbot/seed -Method Post; Write-Output $resp.Content } catch { Write-Output $_.Exception.Message }\"",
+			"args": [],
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

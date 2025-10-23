@@ -1,0 +1,77 @@
+<div class="approvals-container">
+  <div class="header">
+    <h1 class="title">
+      <i class="pi pi-users"></i>
+      Demandes d'approbation
+    </h1>
+    <app-button variant="ghost" icon="pi pi-refresh" (clicked)="loadPendingUsers()">
+      Actualiser
+    </app-button>
+  </div>
+
+  <app-card *ngIf="loading" variant="elevated" padding="lg">
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <p>Chargement des demandes...</p>
+    </div>
+  </app-card>
+
+  <app-card *ngIf="!loading && pendingUsers.length === 0" variant="elevated" padding="lg">
+    <app-empty-state
+      icon="pi pi-check-circle"
+      title="Aucune demande en attente"
+      message="Toutes les demandes d'administrateur ont été traitées."
+    />
+  </app-card>
+
+  <div *ngIf="!loading && pendingUsers.length > 0" class="users-grid">
+    <app-card *ngFor="let user of pendingUsers" variant="elevated" padding="md">
+      <div class="user-card">
+        <div class="user-header">
+          <div class="avatar">
+            {{ user.prenom.charAt(0) }}{{ user.nom.charAt(0) }}
+          </div>
+          <div class="user-info">
+            <h3 class="user-name">{{ user.prenom }} {{ user.nom }}</h3>
+            <p class="user-email">{{ user.mail }}</p>
+            <span class="role-badge">
+              👑 Demande Admin
+            </span>
+          </div>
+        </div>
+
+        <div class="user-details">
+          <div class="detail-item">
+            <i class="pi pi-calendar"></i>
+            <span>Demande le {{ getCreationDate(user.createdAt) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="user.contact?.ville">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ user.contact?.ville }}</span>
+          </div>
+          <div class="detail-item" *ngIf="user.contact?.telephone">
+            <i class="pi pi-phone"></i>
+            <span>{{ user.contact?.telephone }}</span>
+          </div>
+        </div>
+
+        <div class="user-actions">
+          <app-button 
+            variant="success"
+            size="sm"
+            icon="pi pi-check"
+            (clicked)="approveUser(user)">
+            Approuver
+          </app-button>
+          <app-button 
+            variant="danger"
+            size="sm"
+            icon="pi pi-times"
+            (clicked)="rejectUser(user)">
+            Refuser
+          </app-button>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>

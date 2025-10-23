@@ -1,0 +1,428 @@
+<div class="form-container" aria-labelledby="form-title">
+  <!-- Header -->
+  <div class="header">
+    <app-button 
+      variant="ghost"
+      icon="pi pi-arrow-left"
+      (clicked)="goBack()"
+      [ariaLabel]="'Retour'">
+      Retour
+    </app-button>
+    <div class="title-section">
+      <h1 id="form-title">{{ isEditMode ? 'Modifier l\'étudiant' : 'Ajouter un nouvel étudiant' }}</h1>
+      <app-badge 
+        [variant]="isEditMode ? 'warning' : 'success'"
+        size="lg">
+        {{ isEditMode ? 'Modification' : 'Création' }}
+      </app-badge>
+    </div>
+  </div>
+
+  <!-- Global error -->
+  <app-alert 
+    *ngIf="error"
+    variant="error"
+    title="Erreur"
+    [closable]="false">
+    {{ error }}
+  </app-alert>
+
+  <!-- Form -->
+  <app-card 
+    variant="elevated"
+    padding="lg">
+    <form #studentForm="ngForm" (ngSubmit)="onSubmit(studentForm)" class="student-form" novalidate>
+    
+    <!-- Section: Informations de base -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="pi pi-user"></i>
+        Informations de base
+      </h2>
+      <div class="form-grid">
+      <!-- Nom -->
+      <div class="form-group">
+        <label for="nom">Nom <span class="required">*</span></label>
+        <input
+          id="nom" name="nom" class="form-control" type="text" placeholder="Entrez le nom"
+          [(ngModel)]="etudiant.nom" #nom="ngModel" required
+          [class.invalid]="nom.invalid && (nom.touched || studentForm.submitted)"
+          aria-required="true"
+          [attr.aria-invalid]="nom.invalid && (nom.touched || studentForm.submitted)"
+        />
+        <small class="error" *ngIf="nom.errors?.['required'] && (nom.touched || studentForm.submitted)">
+          Le nom est obligatoire.
+        </small>
+      </div>
+
+      <!-- Prénom -->
+      <div class="form-group">
+        <label for="prenom">Prénom <span class="required">*</span></label>
+        <input
+          id="prenom" name="prenom" class="form-control" type="text" placeholder="Entrez le prénom"
+          [(ngModel)]="etudiant.prenom" #prenom="ngModel" required
+          [class.invalid]="prenom.invalid && (prenom.touched || studentForm.submitted)"
+          aria-required="true"
+          [attr.aria-invalid]="prenom.invalid && (prenom.touched || studentForm.submitted)"
+        />
+        <small class="error" *ngIf="prenom.errors?.['required'] && (prenom.touched || studentForm.submitted)">
+          Le prénom est obligatoire.
+        </small>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group full-width">
+        <label for="mail">Email <span class="required">*</span></label>
+        <input
+          id="mail" name="mail" class="form-control" type="email" placeholder="exemple@email.com"
+          [(ngModel)]="etudiant.mail" #mail="ngModel" required email
+          [class.invalid]="mail.invalid && (mail.touched || studentForm.submitted)"
+          aria-required="true"
+          [attr.aria-invalid]="mail.invalid && (mail.touched || studentForm.submitted)"
+        />
+        <small class="error" *ngIf="mail.errors?.['required'] && (mail.touched || studentForm.submitted)">
+          L’email est obligatoire.
+        </small>
+        <small class="error" *ngIf="mail.errors?.['email'] && (mail.touched || studentForm.submitted)">
+          Format d’email invalide.
+        </small>
+      </div>
+
+      <!-- Photo URL + Preview -->
+      <div class="form-group full-width">
+        <label for="photo">Photo (URL)</label>
+        <div class="photo-row">
+          <input
+            id="photo" name="photo" class="form-control" type="url"
+            placeholder="https://exemple.com/photo.jpg"
+            [(ngModel)]="etudiant.photo" #photo="ngModel"
+            (blur)="onPhotoBlur()" [class.invalid]="photoInvalid"
+            [attr.aria-invalid]="photoInvalid"
+          />
+          <div class="avatar-preview" *ngIf="previewUrl; else initials">
+            <img [src]="previewUrl" alt="Aperçu de la photo" (error)="onPreviewError()" />
+          </div>
+          <ng-template #initials>
+            <div class="avatar-preview initials">
+              {{ (etudiant.prenom?.[0] || '') + (etudiant.nom?.[0] || '') | uppercase }}
+            </div>
+          </ng-template>
+        </div>
+        <small class="error" *ngIf="photoInvalid">URL d’image invalide (http(s) requis).</small>
+      </div>
+
+      <!-- Matières -->
+      <div class="form-group full-width">
+        <label>Matières</label>
+
+        <!-- Sélectionnées -->
+        <div class="selected-matieres" *ngIf="etudiant.matieres?.length; else noMats">
+          <span class="chip" *ngFor="let m of etudiant.matieres; let i = index">
+            {{ m }}
+            <!-- 🔧 FIXED: use [attr.aria-label] here -->
+            <button
+              type="button"
+              class="chip__remove"
+              (click)="removeMatiere(i)"
+              [attr.aria-label]="'Retirer ' + m"
+            >
+              ×
+            </button>
+          </span>
+        </div>
+        <ng-template #noMats>
+          <p class="hint">Aucune matière sélectionnée.</p>
+        </ng-template>
+
+        <!-- Sélection des matières avec dropdown -->
+        <div class="matieres-selection">
+          <!-- Dropdown pour sélectionner les matières -->
+          <div class="dropdown-container">
+            <button
+              type="button"
+              class="dropdown-trigger"
+              (click)="toggleDropdown()"
+              [class.active]="isDropdownOpen"
+            >
+              <span class="dropdown-text">
+                <i class="dropdown-icon">📚</i>
+                Sélectionner des matières
+              </span>
+              <span class="dropdown-arrow" [class.rotated]="isDropdownOpen">▼</span>
+            </button>
+
+            <div class="dropdown-menu" *ngIf="isDropdownOpen">
+              <div class="dropdown-header">
+                <span>Choisissez vos matières</span>
+                <button type="button" class="close-dropdown" (click)="closeDropdown()">✕</button>
+              </div>
+              <div class="dropdown-options">
+                <div
+                  class="dropdown-option"
+                  *ngFor="let matiere of allMatieres"
+                  [class.selected]="isMatiereSelected(matiere)"
+                  (click)="toggleMatiere(matiere)"
+                >
+                  <span class="option-checkbox">
+                    <i *ngIf="isMatiereSelected(matiere)" class="check-icon">✓</i>
+                  </span>
+                  <span class="option-text">{{ matiere }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Affichage des matières sélectionnées -->
+          <div class="selected-matieres" *ngIf="etudiant.matieres?.length; else noSelection">
+            <span class="selection-count">
+              {{ etudiant.matieres?.length || 0 }} matière(s) sélectionnée(s) :
+            </span>
+            <div class="selected-tags">
+              <span class="selected-tag" *ngFor="let matiere of etudiant.matieres; let i = index">
+                {{ matiere }}
+                <button type="button" class="remove-tag" (click)="removeMatiere(i)">✕</button>
+              </span>
+            </div>
+          </div>
+          <ng-template #noSelection>
+            <p class="no-selection">Aucune matière sélectionnée</p>
+          </ng-template>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Section: Informations personnelles -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="pi pi-id-card"></i>
+        Informations personnelles
+      </h2>
+      <div class="form-grid">
+        <!-- Date de naissance -->
+        <div class="form-group">
+          <label for="dateNaissance">Date de naissance</label>
+          <input
+            id="dateNaissance" name="dateNaissance" class="form-control" type="date"
+            [(ngModel)]="etudiant.dateNaissance"
+          />
+        </div>
+
+        <!-- Lieu de naissance -->
+        <div class="form-group">
+          <label for="lieuNaissance">Lieu de naissance</label>
+          <input
+            id="lieuNaissance" name="lieuNaissance" class="form-control" type="text"
+            placeholder="Ville de naissance"
+            [(ngModel)]="etudiant.lieuNaissance"
+          />
+        </div>
+
+        <!-- Genre -->
+        <div class="form-group">
+          <label for="genre">Genre</label>
+          <select id="genre" name="genre" class="form-control" [(ngModel)]="etudiant.genre">
+            <option value="">Sélectionner</option>
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+
+        <!-- Nationalité -->
+        <div class="form-group">
+          <label for="nationalite">Nationalité</label>
+          <input
+            id="nationalite" name="nationalite" class="form-control" type="text"
+            placeholder="Française"
+            [(ngModel)]="etudiant.nationalite"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Contact -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="pi pi-phone"></i>
+        Coordonnées
+      </h2>
+      <div class="form-grid">
+        <!-- Téléphone -->
+        <div class="form-group">
+          <label for="telephone">Téléphone</label>
+          <input
+            id="telephone" name="telephone" class="form-control" type="tel"
+            placeholder="06 12 34 56 78"
+            [(ngModel)]="etudiant.telephone"
+          />
+        </div>
+
+        <!-- Téléphone parent -->
+        <div class="form-group">
+          <label for="telephoneParent">Téléphone parent/tuteur</label>
+          <input
+            id="telephoneParent" name="telephoneParent" class="form-control" type="tel"
+            placeholder="06 12 34 56 78"
+            [(ngModel)]="etudiant.telephoneParent"
+          />
+        </div>
+
+        <!-- Adresse -->
+        <div class="form-group full-width">
+          <label for="adresse">Adresse</label>
+          <input
+            id="adresse" name="adresse" class="form-control" type="text"
+            placeholder="Numéro et nom de rue"
+            [(ngModel)]="etudiant.adresse"
+          />
+        </div>
+
+        <!-- Ville -->
+        <div class="form-group">
+          <label for="ville">Ville</label>
+          <input
+            id="ville" name="ville" class="form-control" type="text"
+            placeholder="Paris"
+            [(ngModel)]="etudiant.ville"
+          />
+        </div>
+
+        <!-- Code postal -->
+        <div class="form-group">
+          <label for="codePostal">Code postal</label>
+          <input
+            id="codePostal" name="codePostal" class="form-control" type="text"
+            placeholder="75001"
+            [(ngModel)]="etudiant.codePostal"
+          />
+        </div>
+
+        <!-- Pays -->
+        <div class="form-group">
+          <label for="pays">Pays</label>
+          <input
+            id="pays" name="pays" class="form-control" type="text"
+            placeholder="France"
+            [(ngModel)]="etudiant.pays"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Informations académiques -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="pi pi-book"></i>
+        Informations académiques
+      </h2>
+      <div class="form-grid">
+        <!-- Numéro étudiant -->
+        <div class="form-group">
+          <label for="numeroEtudiant">Numéro étudiant (INE)</label>
+          <input
+            id="numeroEtudiant" name="numeroEtudiant" class="form-control" type="text"
+            placeholder="INE123456789"
+            [(ngModel)]="etudiant.numeroEtudiant"
+          />
+        </div>
+
+        <!-- Niveau -->
+        <div class="form-group">
+          <label for="niveau">Niveau</label>
+          <select id="niveau" name="niveau" class="form-control" [(ngModel)]="etudiant.niveau">
+            <option value="">Sélectionner</option>
+            <option value="Licence 1">Licence 1</option>
+            <option value="Licence 2">Licence 2</option>
+            <option value="Licence 3">Licence 3</option>
+            <option value="Master 1">Master 1</option>
+            <option value="Master 2">Master 2</option>
+            <option value="Doctorat">Doctorat</option>
+          </select>
+        </div>
+
+        <!-- Filière -->
+        <div class="form-group">
+          <label for="filiere">Filière</label>
+          <input
+            id="filiere" name="filiere" class="form-control" type="text"
+            placeholder="Informatique"
+            [(ngModel)]="etudiant.filiere"
+          />
+        </div>
+
+        <!-- Année d'inscription -->
+        <div class="form-group">
+          <label for="anneeInscription">Année d'inscription</label>
+          <input
+            id="anneeInscription" name="anneeInscription" class="form-control" type="number"
+            placeholder="2025"
+            [(ngModel)]="etudiant.anneeInscription"
+            min="2000" max="2100"
+          />
+        </div>
+
+        <!-- Statut -->
+        <div class="form-group">
+          <label for="statut">Statut</label>
+          <select id="statut" name="statut" class="form-control" [(ngModel)]="etudiant.statut">
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+            <option value="diplome">Diplômé</option>
+            <option value="suspendu">Suspendu</option>
+            <option value="abandonne">Abandonné</option>
+          </select>
+        </div>
+
+        <!-- Boursier -->
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              id="boursier" name="boursier" type="checkbox"
+              [(ngModel)]="etudiant.boursier"
+            />
+            <span>Boursier</span>
+          </label>
+        </div>
+
+        <!-- Redoublant -->
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              id="redoublant" name="redoublant" type="checkbox"
+              [(ngModel)]="etudiant.redoublant"
+            />
+            <span>Redoublant</span>
+          </label>
+        </div>
+
+        <!-- Remarques -->
+        <div class="form-group full-width">
+          <label for="remarques">Remarques</label>
+          <textarea
+            id="remarques" name="remarques" class="form-control" rows="3"
+            placeholder="Notes complémentaires..."
+            [(ngModel)]="etudiant.remarques"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+      <app-button 
+        variant="ghost"
+        (clicked)="goBack()">
+        Annuler
+      </app-button>
+      <app-button 
+        type="submit"
+        variant="primary"
+        [loading]="loading"
+        icon="pi pi-check">
+        {{ isEditMode ? 'Modifier l\'étudiant' : 'Créer l\'étudiant' }}
+      </app-button>
+    </div>
+    </form>
+  </app-card>
+</div>

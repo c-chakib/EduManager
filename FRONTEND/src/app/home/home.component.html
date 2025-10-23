@@ -1,0 +1,540 @@
+<!-- Hero Section with Modern Design -->
+<div class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 overflow-hidden">
+  <!-- Animated Background Elements -->
+  <div class="absolute inset-0">
+    <!-- Grid Pattern -->
+    <div class="absolute inset-0 bg-grid-white/[0.05] bg-[size:50px_50px]"></div>
+    
+    <!-- Floating Orbs -->
+    <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+    <div class="absolute top-0 -right-4 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+  </div>
+
+  <!-- Hero Content -->
+  <div class="relative">
+    <div class="container-custom px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
+      <div class="text-center max-w-5xl mx-auto">
+        <!-- Trust Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8 animate-fade-in">
+          <div class="flex items-center">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+          </div>
+          <span class="text-white/90 text-sm font-medium">✨ Utilisé par +500 établissements d'enseignement</span>
+        </div>
+
+        <!-- Main Headline -->
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6 animate-slide-up">
+          Simplifiez la gestion de vos
+          <span class="block mt-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+            étudiants en 3 clics
+          </span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-8 leading-relaxed animate-slide-up animation-delay-200">
+          EduManager automatise votre gestion académique pour que vous puissiez vous concentrer sur l'essentiel : 
+          <span class="text-white font-semibold">la réussite de vos étudiants</span>
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up animation-delay-400">
+          <app-button 
+            variant="primary"
+            icon="pi pi-rocket"
+            iconRight="pi pi-arrow-right"
+            (clicked)="router.navigate(['/register'])"
+            size="lg">
+            Commencer gratuitement
+          </app-button>
+          <app-button 
+            variant="ghost"
+            icon="pi pi-play-circle"
+            iconRight="pi pi-arrow-down"
+            (clicked)="scrollToSection('demo')"
+            size="lg">
+            Voir la démo
+          </app-button>
+        </div>
+
+        <!-- Social Proof / Stats Mini -->
+        <div class="flex flex-wrap justify-center items-center gap-8 text-white/80 text-sm">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-check-circle text-green-400 text-lg"></i>
+            <span><strong class="text-white">Gratuit</strong> pendant 30 jours</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-shield text-blue-400 text-lg"></i>
+            <span><strong class="text-white">Sécurisé</strong> à 100%</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-bolt text-yellow-400 text-lg"></i>
+            <span><strong class="text-white">5 min</strong> pour démarrer</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual - Modern Dashboard Preview -->
+      <div class="mt-16 relative max-w-6xl mx-auto animate-fade-in animation-delay-600">
+        <div class="relative rounded-2xl shadow-2xl overflow-hidden border-4 border-white/20 backdrop-blur-sm bg-white/5">
+          <!-- Browser Chrome -->
+          <div class="bg-gray-800/90 px-4 py-3 flex items-center gap-2 border-b border-gray-700">
+            <div class="flex gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <div class="flex-1 mx-4 bg-gray-700/50 rounded px-3 py-1 text-xs text-gray-400">
+              <i class="pi pi-lock text-green-400 mr-2"></i>
+              edumanager.com/dashboard
+            </div>
+          </div>
+          
+          <!-- Dashboard Preview Content -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <!-- Mini Stat Cards -->
+              <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500 transform hover:scale-105 transition-transform">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm">Étudiants</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ stats[0].value }}</p>
+                  </div>
+                  <i class="pi pi-users text-4xl text-blue-500"></i>
+                </div>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500 transform hover:scale-105 transition-transform">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm">Matières</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ stats[1].value }}</p>
+                  </div>
+                  <i class="pi pi-book text-4xl text-green-500"></i>
+                </div>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-purple-500 transform hover:scale-105 transition-transform">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm">Taux réussite</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ stats[2].value }}</p>
+                  </div>
+                  <i class="pi pi-chart-line text-4xl text-purple-500"></i>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Table Preview -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-800">Liste des étudiants</h3>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">
+                  <i class="pi pi-plus mr-1"></i> Ajouter
+                </button>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                    JD
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-semibold text-gray-800">Jean Dupont</p>
+                    <p class="text-sm text-gray-500">Informatique - Master 2</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Actif</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold">
+                    SM
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-semibold text-gray-800">Sophie Martin</p>
+                    <p class="text-sm text-gray-500">Mathématiques - Licence 3</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Actif</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Floating Elements Around Dashboard -->
+        <div class="absolute -top-4 -left-4 bg-white rounded-lg shadow-xl p-3 animate-float">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-check-circle text-green-500 text-xl"></i>
+            <span class="text-sm font-semibold text-gray-700">Données synchronisées</span>
+          </div>
+        </div>
+        
+        <div class="absolute -bottom-4 -right-4 bg-white rounded-lg shadow-xl p-3 animate-float animation-delay-2000">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-bolt text-yellow-500 text-xl"></i>
+            <span class="text-sm font-semibold text-gray-700">Rapide & Efficace</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wave Separator -->
+  <div class="relative">
+    <svg class="w-full h-16 sm:h-24" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F9FAFB"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Trusted By Section -->
+<section class="py-12 bg-gray-50">
+  <div class="container-custom px-4">
+    <p class="text-center text-gray-600 font-semibold mb-8 uppercase tracking-wider text-sm">
+      Ils nous font confiance
+    </p>
+    <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+      <div class="text-3xl font-bold text-gray-400">🎓 Université Paris</div>
+      <div class="text-3xl font-bold text-gray-400">📚 École Centrale</div>
+      <div class="text-3xl font-bold text-gray-400">🏫 Lycée Victor Hugo</div>
+      <div class="text-3xl font-bold text-gray-400">🎯 École High Tech</div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section with Better Layout -->
+<section id="features" class="py-20 bg-white">
+  <div class="container-custom px-4">
+    <!-- Section Header -->
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-bold mb-4 uppercase tracking-wide">
+        <i class="pi pi-star-fill mr-2"></i>
+        Fonctionnalités
+      </span>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
+        Tout ce dont vous avez besoin,
+        <span class="text-blue-600">au même endroit</span>
+      </h2>
+      <p class="text-xl text-gray-600 leading-relaxed">
+        Une suite complète d'outils conçus pour simplifier votre quotidien et booster votre productivité
+      </p>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div *ngFor="let feature of features; let i = index" 
+           (click)="navigateToFeature(feature.route)"
+           class="group relative bg-white rounded-2xl p-8 border-2 border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2">
+        
+        <!-- Number Badge -->
+        <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+          {{ i + 1 }}
+        </div>
+        
+        <!-- Icon -->
+        <div [class]="'w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ' + feature.color">
+          <i [class]="'pi ' + feature.icon + ' text-2xl text-white'"></i>
+        </div>
+        
+        <!-- Content -->
+        <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+          {{ feature.title }}
+        </h3>
+        <p class="text-gray-600 leading-relaxed mb-4">
+          {{ feature.description }}
+        </p>
+        
+        <!-- Arrow -->
+        <div class="flex items-center gap-2 text-blue-600 font-semibold opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-2 transition-all">
+          <span>Découvrir</span>
+          <i class="pi pi-arrow-right"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section - More Impactful -->
+<section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600 relative overflow-hidden">
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute inset-0 bg-grid-white/[0.1] bg-[size:30px_30px]"></div>
+  </div>
+
+  <div class="container-custom px-4 relative z-10">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">
+        Des résultats mesurables dès le premier jour
+      </h2>
+      <p class="text-xl text-blue-100">
+        Rejoignez des centaines d'établissements qui ont transformé leur gestion
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div *ngFor="let stat of stats" class="text-center">
+        <div class="mb-4">
+          <i [class]="'pi ' + stat.icon + ' text-5xl text-white opacity-80'"></i>
+        </div>
+        <div [class]="'text-4xl md:text-5xl font-extrabold mb-2 ' + (stat.color.includes('white') ? 'text-white' : 'text-yellow-300')">
+          {{ stat.value }}
+        </div>
+        <div class="text-blue-100 font-medium">{{ stat.label }}</div>
+        <div *ngIf="stat.trend" class="mt-2 inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+          {{ stat.trend }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="demo" class="py-20 bg-gray-50">
+  <div class="container-custom px-4">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-bold mb-4 uppercase tracking-wide">
+        <i class="pi pi-lightbulb mr-2"></i>
+        Comment ça marche
+      </span>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
+        Démarrez en <span class="text-purple-600">3 étapes simples</span>
+      </h2>
+    </div>
+
+    <div class="max-w-5xl mx-auto">
+      <div class="relative">
+        <!-- Connecting Line -->
+        <div class="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 transform -translate-y-1/2"></div>
+        
+        <!-- Steps -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+          <!-- Step 1 -->
+          <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow text-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6 shadow-lg">
+              1
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto mb-4">
+              <i class="pi pi-user-plus text-2xl text-blue-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Créez votre compte</h3>
+            <p class="text-gray-600">
+              Inscription gratuite en 2 minutes. Aucune carte bancaire requise.
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow text-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6 shadow-lg">
+              2
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mx-auto mb-4">
+              <i class="pi pi-upload text-2xl text-purple-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Importez vos données</h3>
+            <p class="text-gray-600">
+              Importez votre liste d'étudiants en quelques clics ou ajoutez-les manuellement.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow text-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6 shadow-lg">
+              3
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center mx-auto mb-4">
+              <i class="pi pi-check-circle text-2xl text-pink-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">C'est prêt !</h3>
+            <p class="text-gray-600">
+              Commencez à gérer vos étudiants efficacement dès maintenant.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section - Enhanced -->
+<section class="py-20 bg-white">
+  <div class="container-custom px-4">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="inline-block px-4 py-2 bg-yellow-100 text-yellow-700 rounded-full text-sm font-bold mb-4 uppercase tracking-wide">
+        <i class="pi pi-heart-fill mr-2"></i>
+        Témoignages
+      </span>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
+        Ce que nos utilisateurs disent
+      </h2>
+      <p class="text-xl text-gray-600">
+        Plus de 500 établissements nous font confiance au quotidien
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div *ngFor="let testimonial of testimonials" 
+           class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 relative">
+        
+        <!-- Quote Icon -->
+        <div class="absolute top-6 right-6 text-6xl text-blue-100 opacity-50">
+          "
+        </div>
+        
+        <!-- Stars -->
+        <div class="flex gap-1 mb-4">
+          <i *ngFor="let star of [1,2,3,4,5]" class="pi pi-star-fill text-yellow-400 text-lg"></i>
+        </div>
+        
+        <!-- Message -->
+        <p class="text-gray-700 text-lg mb-6 leading-relaxed relative z-10">
+          {{ testimonial.message }}
+        </p>
+        
+        <!-- Author -->
+        <div class="flex items-center gap-4 pt-4 border-t border-gray-100">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl shadow-md">
+            {{ testimonial.avatar }}
+          </div>
+          <div>
+            <div class="font-bold text-gray-900 text-lg">{{ testimonial.name }}</div>
+            <div class="text-sm text-gray-500">{{ testimonial.role }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section - More Compelling -->
+<section class="py-20 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
+  <!-- Animated Background -->
+  <div class="absolute inset-0 opacity-20">
+    <div class="absolute top-0 left-0 w-full h-full bg-grid-white/[0.1] bg-[size:40px_40px]"></div>
+  </div>
+
+  <div class="container-custom px-4 relative z-10">
+    <div class="max-w-4xl mx-auto text-center text-white">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 mb-8">
+        <i class="pi pi-clock text-yellow-300"></i>
+        <span class="text-sm font-semibold">Offre limitée - 30 jours d'essai gratuit</span>
+      </div>
+
+      <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
+        Prêt à transformer votre gestion académique ?
+      </h2>
+      
+      <p class="text-xl md:text-2xl text-white/90 mb-10 leading-relaxed max-w-3xl mx-auto">
+        Rejoignez les <strong>500+ établissements</strong> qui utilisent EduManager pour 
+        <strong>gagner 10 heures par semaine</strong> et améliorer la réussite de leurs étudiants.
+      </p>
+      
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        <button 
+          (click)="router.navigate(['/register'])"
+          class="group inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-indigo-900 bg-white rounded-xl shadow-2xl hover:shadow-white/50 transform hover:scale-105 transition-all duration-300">
+          <i class="pi pi-rocket mr-2"></i>
+          Démarrer gratuitement
+          <i class="pi pi-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+        </button>
+        
+        <button 
+          (click)="router.navigate(['/login'])"
+          class="inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-white bg-transparent border-2 border-white rounded-xl hover:bg-white/10 transition-all duration-300">
+          <i class="pi pi-sign-in mr-2"></i>
+          Se connecter
+        </button>
+      </div>
+
+      <!-- Features List -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-check-circle text-green-300 text-3xl"></i>
+          <span class="text-sm font-medium">30 jours gratuits</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-credit-card text-blue-300 text-3xl"></i>
+          <span class="text-sm font-medium">Aucune carte requise</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-clock text-purple-300 text-3xl"></i>
+          <span class="text-sm font-medium">Installation en 5 min</span>
+        </div>
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-users text-pink-300 text-3xl"></i>
+          <span class="text-sm font-medium">Support 24/7</span>
+        </div>
+      </div>
+
+      <!-- Guarantee Badge -->
+      <div class="mt-12 inline-flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+        <i class="pi pi-shield text-green-300 text-2xl"></i>
+        <span class="text-sm font-semibold">✅ Garantie satisfait ou remboursé 60 jours</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-20 bg-gray-50">
+  <div class="container-custom px-4">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-4 uppercase tracking-wide">
+        <i class="pi pi-question-circle mr-2"></i>
+        Questions fréquentes
+      </span>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
+        Vous avez des questions ?
+      </h2>
+      <p class="text-xl text-gray-600">
+        Nous avons les réponses
+      </p>
+    </div>
+
+    <div class="max-w-3xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+        <h3 class="font-bold text-gray-900 text-lg mb-2 flex items-center gap-2">
+          <i class="pi pi-check-circle text-green-500"></i>
+          Est-ce vraiment gratuit pendant 30 jours ?
+        </h3>
+        <p class="text-gray-600 pl-8">
+          Oui, absolument ! Aucune carte bancaire n'est requise pour commencer. Vous pouvez tester toutes les fonctionnalités sans engagement.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+        <h3 class="font-bold text-gray-900 text-lg mb-2 flex items-center gap-2">
+          <i class="pi pi-check-circle text-green-500"></i>
+          Puis-je importer mes données existantes ?
+        </h3>
+        <p class="text-gray-600 pl-8">
+          Bien sûr ! Vous pouvez importer vos listes d'étudiants via fichier Excel/CSV ou les ajouter manuellement. Notre équipe peut vous aider pour une migration complète.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+        <h3 class="font-bold text-gray-900 text-lg mb-2 flex items-center gap-2">
+          <i class="pi pi-check-circle text-green-500"></i>
+          Mes données sont-elles sécurisées ?
+        </h3>
+        <p class="text-gray-600 pl-8">
+          La sécurité est notre priorité. Toutes vos données sont cryptées et stockées sur des serveurs sécurisés. Nous sommes conformes au RGPD.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-center mt-12">
+      <p class="text-gray-600 mb-4">Vous ne trouvez pas la réponse à votre question ?</p>
+      <button 
+        (click)="router.navigate(['/contact'])"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+        <i class="pi pi-comments"></i>
+        Contactez notre équipe
+      </button>
+    </div>
+  </div>
+</section>

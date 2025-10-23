@@ -1,0 +1,424 @@
+<div class="student-details-container">
+  <!-- Header with Back Button -->
+  <div class="header-section">
+    <app-button 
+      variant="ghost"
+      icon="pi pi-arrow-left"
+      (clicked)="goBack()">
+      Retour
+    </app-button>
+    
+    <div class="header-actions" *ngIf="canEditStudent()">
+      <app-button 
+        *ngIf="!isEditing"
+        variant="primary"
+        icon="pi pi-pencil"
+        (clicked)="toggleEditMode()">
+        Modifier
+      </app-button>
+      <app-button 
+        *ngIf="isEditing"
+        variant="success"
+        icon="pi pi-check"
+        [loading]="loading"
+        (clicked)="saveChanges()">
+        Enregistrer
+      </app-button>
+      <app-button 
+        *ngIf="isEditing"
+        variant="ghost"
+        icon="pi pi-times"
+        (clicked)="cancelEdit()">
+        Annuler
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <app-loading-spinner
+    *ngIf="loading && !etudiant"
+    size="lg"
+    [centered]="true"
+    message="Chargement des détails...">
+  </app-loading-spinner>
+
+  <!-- Error State -->
+  <app-alert 
+    *ngIf="error"
+    variant="error"
+    title="Erreur"
+    [closable]="false">
+    {{ error }}
+  </app-alert>
+
+  <!-- Student Profile -->
+  <div *ngIf="!loading && !error && etudiant" class="profile-layout">
+    
+    <!-- Left Sidebar - Quick Info -->
+    <aside class="profile-sidebar">
+      <div class="profile-card">
+        <!-- Avatar -->
+        <div class="avatar-section">
+          <img 
+            [src]="etudiant.photo || 'https://ui-avatars.com/api/?name=' + etudiant.prenom + '+' + etudiant.nom + '&size=200&background=3b82f6&color=fff'" 
+            [alt]="'Photo de ' + etudiant.prenom + ' ' + etudiant.nom"
+            class="student-avatar">
+          <h2 class="student-name">{{ etudiant.prenom }} {{ etudiant.nom }}</h2>
+          <app-badge 
+            [variant]="getStatusVariant(etudiant.statut || 'actif')"
+            size="md">
+            {{ getStatusLabel(etudiant.statut || 'actif') }}
+          </app-badge>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat-item">
+            <i class="pi pi-id-card"></i>
+            <div class="stat-content">
+              <span class="stat-label">ID</span>
+              <span class="stat-value">{{ etudiant.id }}</span>
+            </div>
+          </div>
+          
+          <div class="stat-item" *ngIf="etudiant.numeroEtudiant">
+            <i class="pi pi-bookmark"></i>
+            <div class="stat-content">
+              <span class="stat-label">N° Étudiant</span>
+              <span class="stat-value">{{ etudiant.numeroEtudiant }}</span>
+            </div>
+          </div>
+
+          <div class="stat-item" *ngIf="etudiant.age">
+            <i class="pi pi-calendar"></i>
+            <div class="stat-content">
+              <span class="stat-label">Âge</span>
+              <span class="stat-value">{{ etudiant.age }} ans</span>
+            </div>
+          </div>
+
+          <div class="stat-item" *ngIf="etudiant.moyenneGenerale">
+            <i class="pi pi-chart-line"></i>
+            <div class="stat-content">
+              <span class="stat-label">Moyenne</span>
+              <span class="stat-value" [class.moyenne-bon]="etudiant.moyenneGenerale >= 12" [class.moyenne-passable]="etudiant.moyenneGenerale >= 10 && etudiant.moyenneGenerale < 12">
+                {{ etudiant.moyenneGenerale }}/20
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content - Detailed Info -->
+    <main class="profile-main">
+      
+      <!-- Section: Informations de base -->
+      <app-card 
+        title="Informations de base"
+        icon="pi pi-user"
+        variant="elevated"
+        padding="md">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nom</label>
+            <span *ngIf="!isEditing">{{ etudiant.nom }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.nom"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Prénom</label>
+            <span *ngIf="!isEditing">{{ etudiant.prenom }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.prenom"
+              class="edit-input">
+          </div>
+
+          <div class="info-item full-width">
+            <label>Email</label>
+            <span *ngIf="!isEditing">
+              <a [href]="'mailto:' + etudiant.mail">{{ etudiant.mail }}</a>
+            </span>
+            <input 
+              *ngIf="isEditing" 
+              type="email" 
+              [(ngModel)]="editedEtudiant.mail"
+              class="edit-input">
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Section: Informations personnelles -->
+      <app-card 
+        title="Informations personnelles"
+        icon="pi pi-id-card"
+        variant="elevated"
+        padding="md">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Date de naissance</label>
+            <span *ngIf="!isEditing">
+              <ng-container *ngIf="etudiant.dateNaissance; else noDate">
+                {{ etudiant.dateNaissance | date:'dd/MM/yyyy' }}
+              </ng-container>
+              <ng-template #noDate>Non renseignée</ng-template>
+            </span>
+            <input 
+              *ngIf="isEditing" 
+              type="date" 
+              [(ngModel)]="editedEtudiant.dateNaissance"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Lieu de naissance</label>
+            <span *ngIf="!isEditing">{{ etudiant.lieuNaissance || 'Non renseigné' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.lieuNaissance"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Genre</label>
+            <span *ngIf="!isEditing">{{ getGenreLabel(etudiant.genre) }}</span>
+            <select 
+              *ngIf="isEditing" 
+              [(ngModel)]="editedEtudiant.genre"
+              class="edit-input">
+              <option value="">Sélectionner</option>
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </div>
+
+          <div class="info-item">
+            <label>Nationalité</label>
+            <span *ngIf="!isEditing">{{ etudiant.nationalite || 'Non renseignée' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.nationalite"
+              class="edit-input">
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Section: Coordonnées -->
+      <app-card 
+        title="Coordonnées"
+        icon="pi pi-phone"
+        variant="elevated"
+        padding="md">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Téléphone</label>
+            <span *ngIf="!isEditing">
+              <a *ngIf="etudiant.telephone" [href]="'tel:' + etudiant.telephone">{{ etudiant.telephone }}</a>
+              <span *ngIf="!etudiant.telephone">Non renseigné</span>
+            </span>
+            <input 
+              *ngIf="isEditing" 
+              type="tel" 
+              [(ngModel)]="editedEtudiant.telephone"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Téléphone parent</label>
+            <span *ngIf="!isEditing">
+              <a *ngIf="etudiant.telephoneParent" [href]="'tel:' + etudiant.telephoneParent">{{ etudiant.telephoneParent }}</a>
+              <span *ngIf="!etudiant.telephoneParent">Non renseigné</span>
+            </span>
+            <input 
+              *ngIf="isEditing" 
+              type="tel" 
+              [(ngModel)]="editedEtudiant.telephoneParent"
+              class="edit-input">
+          </div>
+
+          <div class="info-item full-width">
+            <label>Adresse</label>
+            <span *ngIf="!isEditing">{{ etudiant.adresse || 'Non renseignée' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.adresse"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Ville</label>
+            <span *ngIf="!isEditing">{{ etudiant.ville || 'Non renseignée' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.ville"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Code postal</label>
+            <span *ngIf="!isEditing">{{ etudiant.codePostal || 'Non renseigné' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.codePostal"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Pays</label>
+            <span *ngIf="!isEditing">{{ etudiant.pays || 'Non renseigné' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.pays"
+              class="edit-input">
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Section: Informations académiques -->
+      <app-card 
+        title="Informations académiques"
+        icon="pi pi-book"
+        variant="elevated"
+        padding="md">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Niveau</label>
+            <span *ngIf="!isEditing">{{ etudiant.niveau || 'Non renseigné' }}</span>
+            <select 
+              *ngIf="isEditing" 
+              [(ngModel)]="editedEtudiant.niveau"
+              class="edit-input">
+              <option value="">Sélectionner</option>
+              <option value="Licence 1">Licence 1</option>
+              <option value="Licence 2">Licence 2</option>
+              <option value="Licence 3">Licence 3</option>
+              <option value="Master 1">Master 1</option>
+              <option value="Master 2">Master 2</option>
+              <option value="Doctorat">Doctorat</option>
+            </select>
+          </div>
+
+          <div class="info-item">
+            <label>Filière</label>
+            <span *ngIf="!isEditing">{{ etudiant.filiere || 'Non renseignée' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="text" 
+              [(ngModel)]="editedEtudiant.filiere"
+              class="edit-input">
+          </div>
+
+          <div class="info-item">
+            <label>Année d'inscription</label>
+            <span *ngIf="!isEditing">{{ etudiant.anneeInscription || 'Non renseignée' }}</span>
+            <input 
+              *ngIf="isEditing" 
+              type="number" 
+              [(ngModel)]="editedEtudiant.anneeInscription"
+              class="edit-input"
+              min="2000" max="2100">
+          </div>
+
+          <div class="info-item">
+            <label>Statut</label>
+            <span *ngIf="!isEditing">
+              <app-badge [variant]="getStatusVariant(etudiant.statut || 'actif')">
+                {{ getStatusLabel(etudiant.statut || 'actif') }}
+              </app-badge>
+            </span>
+            <select 
+              *ngIf="isEditing" 
+              [(ngModel)]="editedEtudiant.statut"
+              class="edit-input">
+              <option value="actif">Actif</option>
+              <option value="inactif">Inactif</option>
+              <option value="diplome">Diplômé</option>
+              <option value="suspendu">Suspendu</option>
+              <option value="abandonne">Abandonné</option>
+            </select>
+          </div>
+
+          <div class="info-item">
+            <label>Boursier</label>
+            <span *ngIf="!isEditing">
+              <app-badge [variant]="etudiant.boursier ? 'success' : 'secondary'">
+                {{ etudiant.boursier ? 'Oui' : 'Non' }}
+              </app-badge>
+            </span>
+            <label *ngIf="isEditing" class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="editedEtudiant.boursier">
+              <span>Oui</span>
+            </label>
+          </div>
+
+          <div class="info-item">
+            <label>Redoublant</label>
+            <span *ngIf="!isEditing">
+              <app-badge [variant]="etudiant.redoublant ? 'warning' : 'secondary'">
+                {{ etudiant.redoublant ? 'Oui' : 'Non' }}
+              </app-badge>
+            </span>
+            <label *ngIf="isEditing" class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="editedEtudiant.redoublant">
+              <span>Oui</span>
+            </label>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Section: Matières -->
+      <app-card 
+        title="Matières"
+        icon="pi pi-list"
+        variant="elevated"
+        padding="md">
+        <div class="matieres-list">
+          <app-badge 
+            *ngFor="let matiere of etudiant.matieres"
+            variant="info"
+            size="lg">
+            {{ matiere }}
+          </app-badge>
+          <p *ngIf="!etudiant.matieres || etudiant.matieres.length === 0" class="no-data">
+            Aucune matière enregistrée
+          </p>
+        </div>
+      </app-card>
+
+      <!-- Section: Remarques -->
+      <app-card 
+        *ngIf="etudiant.remarques || isEditing"
+        title="Remarques"
+        icon="pi pi-comment"
+        variant="elevated"
+        padding="md">
+        <div class="info-grid">
+          <div class="info-item full-width">
+            <span *ngIf="!isEditing">{{ etudiant.remarques || 'Aucune remarque' }}</span>
+            <textarea 
+              *ngIf="isEditing" 
+              [(ngModel)]="editedEtudiant.remarques"
+              class="edit-input"
+              rows="4"
+              placeholder="Notes complémentaires...">
+            </textarea>
+          </div>
+        </div>
+      </app-card>
+
+    </main>
+  </div>
+</div>

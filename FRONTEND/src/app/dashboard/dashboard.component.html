@@ -1,0 +1,211 @@
+<div class="statistics-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement du dashboard...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <p>{{ errorMessage }}</p>
+    <button class="retry-btn" (click)="loadStatistics()">Réessayer</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && !errorMessage">
+    <!-- Header -->
+    <div class="stats-header">
+      <h1>📊 Dashboard</h1>
+      <p class="stats-description">Aperçu des données et tendances de vos étudiants</p>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="overview-cards">
+      <div class="stat-card total-students">
+        <div class="card-icon">👥</div>
+        <div class="card-content">
+          <h3>Total Étudiants</h3>
+          <p class="stat-number">{{ totalStudents }}</p>
+        </div>
+      </div>
+      <div class="stat-card average-age">
+        <div class="card-icon">📅</div>
+        <div class="card-content">
+          <h3>Âge Moyen</h3>
+          <p class="stat-number">{{ averageAge }} ans</p>
+        </div>
+      </div>
+      <div class="stat-card levels-count">
+        <div class="card-icon">📚</div>
+        <div class="card-content">
+          <h3>Nombre de Niveaux</h3>
+          <p class="stat-number">{{ getLevelsCount() }}</p>
+        </div>
+      </div>
+      <div class="stat-card specializations-count">
+        <div class="card-icon">🎯</div>
+        <div class="card-content">
+          <h3>Spécialisations</h3>
+          <p class="stat-number">{{ getSpecializationsCount() }}</p>
+        </div>
+      </div>
+      <div class="stat-card subjects-count">
+        <div class="card-icon">📖</div>
+        <div class="card-content">
+          <h3>Matières</h3>
+          <p class="stat-number">{{ getSubjectsCount() }}</p>
+        </div>
+      </div>
+      <div class="stat-card scholarship-percent">
+        <div class="card-icon">💰</div>
+        <div class="card-content">
+          <h3>Taux de Bourse</h3>
+          <p class="stat-number">{{ getScholarshipPercentage() }}%</p>
+        </div>
+      </div>
+      <div class="stat-card overall-average">
+        <div class="card-icon">⭐</div>
+        <div class="card-content">
+          <h3>Moyenne Générale</h3>
+          <p class="stat-number">{{ getOverallAverage() }}/20</p>
+        </div>
+      </div>
+      <div class="stat-card top-students-count">
+        <div class="card-icon">🏆</div>
+        <div class="card-content">
+          <h3>Top Étudiants</h3>
+          <p class="stat-number">{{ topStudents.length }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <!-- Level Distribution Chart -->
+      <div class="chart-card">
+        <h3>📊 Répartition par Niveau</h3>
+        <div class="chart-container">
+          <div class="progress-chart" *ngFor="let item of chartDataLevels; let i = index">
+            <div class="chart-item">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="item.percentage" [style.background-color]="getProgressColor(i)"></div>
+              </div>
+              <span class="chart-value">{{ item.value }} ({{ item.percentage }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Specialization Distribution Chart -->
+      <div class="chart-card">
+        <h3>🎯 Répartition par Spécialisation</h3>
+        <div class="chart-container">
+          <div class="progress-chart" *ngFor="let item of chartDataSpecializations; let i = index">
+            <div class="chart-item">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="item.percentage" [style.background-color]="getProgressColor(i)"></div>
+              </div>
+              <span class="chart-value">{{ item.value }} ({{ item.percentage }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Gender Distribution Chart -->
+      <div class="chart-card" *ngIf="chartDataGender.length > 0">
+        <h3>⚤ Répartition par Genre</h3>
+        <div class="chart-container">
+          <div class="progress-chart" *ngFor="let item of chartDataGender; let i = index">
+            <div class="chart-item">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="item.percentage" [style.background-color]="getProgressColor(i)"></div>
+              </div>
+              <span class="chart-value">{{ item.value }} ({{ item.percentage }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Subject Distribution Chart -->
+      <div class="chart-card" *ngIf="chartDataSubjects.length > 0">
+        <h3>📖 Top 10 Matières Populaires</h3>
+        <div class="chart-container">
+          <div class="progress-chart" *ngFor="let item of chartDataSubjects; let i = index">
+            <div class="chart-item">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="item.percentage" [style.background-color]="getProgressColor(i)"></div>
+              </div>
+              <span class="chart-value">{{ item.value }} étudiants (Moy: {{ item.average }})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Scholarship Distribution Chart -->
+      <div class="chart-card" *ngIf="chartDataScholarships.length > 0">
+        <h3>💰 Répartition des Bourses</h3>
+        <div class="chart-container">
+          <div class="progress-chart" *ngFor="let item of chartDataScholarships; let i = index">
+            <div class="chart-item">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="item.percentage" [style.background-color]="getProgressColor(i + 5)"></div>
+              </div>
+              <span class="chart-value">{{ item.value }} ({{ item.percentage }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Students Section -->
+    <div class="top-students-section" *ngIf="topStudents.length > 0">
+      <h2>🏆 Top 10 Meilleurs Étudiants</h2>
+      <div class="students-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Rang</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Niveau</th>
+              <th>Spécialité</th>
+              <th>Moyenne</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of topStudents; let i = index" [class.top-three]="i < 3">
+              <td class="rank">
+                <span *ngIf="i === 0" class="medal gold">🥇</span>
+                <span *ngIf="i === 1" class="medal silver">🥈</span>
+                <span *ngIf="i === 2" class="medal bronze">🥉</span>
+                <span *ngIf="i > 2">{{ i + 1 }}</span>
+              </td>
+              <td>{{ student.nom }}</td>
+              <td>{{ student.prenom }}</td>
+              <td>{{ student.niveau }}</td>
+              <td>{{ student.specialite }}</td>
+              <td class="average">{{ student.moyenne }}/20</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+      <div class="summary-card">
+        <h3>📋 Résumé</h3>
+        <div class="summary-content">
+          <p>La plateforme gère <strong>{{ totalStudents }}</strong> étudiants.</p>
+          <p>L'âge moyen est de <strong>{{ averageAge }} ans</strong>.</p>
+          <p>Ils sont répartis sur <strong>{{ getLevelsCount() }}</strong> niveaux 
+             et <strong>{{ getSpecializationsCount() }}</strong> spécialisations.</p>
+          <p><strong>{{ getScholarshipPercentage() }}%</strong> des étudiants bénéficient d'une bourse.</p>
+          <p>La moyenne générale est de <strong>{{ getOverallAverage() }}/20</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

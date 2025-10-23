@@ -1,0 +1,26 @@
+/* Import shared page styles */
+@import '../documentation/documentation.component.css';
+
+/* Privacy Intro */
+.privacy-intro {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #2563eb;
+}
+
+.privacy-intro p {
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.privacy-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.privacy-intro strong {
+  color: #0f172a;
+}

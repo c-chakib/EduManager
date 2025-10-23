@@ -1,0 +1,177 @@
+<footer class="footer">
+  <!-- Wave Separator -->
+  <div class="footer-wave">
+    <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0V120Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- Main Footer Content -->
+  <div class="footer-content">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand Section -->
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <div class="logo-icon">
+              <img src="assets/logo.svg" alt="EduManager Logo" class="logo-image">
+            </div>
+            <span class="logo-text">EduManager</span>
+          </div>
+          <p class="brand-description">
+            La solution moderne pour simplifier la gestion académique. 
+            Conçue par des éducateurs, pour des éducateurs.
+          </p>
+          <div class="social-links">
+            <a 
+              *ngFor="let social of socialLinks" 
+              [href]="social.url" 
+              class="social-link"
+              [title]="social.name"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i [class]="social.icon + ' social-icon'"></i>
+            </a>
+          </div>
+          <!-- Trust Badges -->
+          <div class="trust-badges">
+            <app-badge variant="success" icon="pi pi-lock">Sécurisé SSL</app-badge>
+            <app-badge variant="info" icon="pi pi-check">RGPD</app-badge>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="footer-section">
+          <h3 class="section-title">
+            <span class="title-icon"><i class="fas fa-bolt"></i></span>
+            Navigation
+          </h3>
+          <ul class="footer-links">
+            <li *ngFor="let link of quickLinks">
+              <a routerLink="{{link.route}}" class="footer-link">
+                {{link.name}}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div class="footer-section">
+          <h3 class="section-title">
+            <span class="title-icon"><i class="fas fa-book"></i></span>
+            Ressources
+          </h3>
+          <ul class="footer-links">
+            <li *ngFor="let resource of resources">
+              <a routerLink="{{resource.route}}" class="footer-link">
+                {{resource.name}}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="footer-section">
+          <h3 class="section-title">
+            <span class="title-icon"><i class="fas fa-comments"></i></span>
+            Contact
+          </h3>
+          <div class="contact-info">
+            <a href="mailto:contact&#64;edumanager.com" class="contact-item">
+              <span class="contact-icon"><i class="fas fa-envelope"></i></span>
+              <span class="contact-text">contact&#64;edumanager.com</span>
+            </a>
+            <a href="tel:+212662127709" class="contact-item">
+              <span class="contact-icon"><i class="fas fa-phone"></i></span>
+              <span class="contact-text">+212 662 12 7709</span>
+            </a>
+            <app-button variant="primary" icon="pi pi-comments" (clicked)="openChatbot()" class="contact-item contact-button">
+              Chat en direct
+            </app-button>
+            <div class="contact-item">
+              <span class="contact-icon"><i class="fas fa-map-marker-alt"></i></span>
+              <span class="contact-text">Rabat, Maroc</span>
+            </div>
+            <div class="contact-item">
+              <span class="contact-icon"><i class="fas fa-clock"></i></span>
+              <span class="contact-text">Lun-Ven: 9h-18h</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Newsletter Section -->
+      <div class="newsletter-section">
+        <div class="newsletter-content">
+          <div class="newsletter-text">
+            <div class="newsletter-badge"><i class="fas fa-envelope-open-text"></i> Newsletter</div>
+            <h3 class="newsletter-title">Restez à la pointe de l'innovation</h3>
+            <p class="newsletter-description">
+              Recevez nos dernières fonctionnalités, conseils et actualités directement dans votre boîte mail
+            </p>
+          </div>
+          <div class="newsletter-form">
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                <input 
+                  type="email" 
+                  placeholder="votre@email.com" 
+                  class="newsletter-input"
+                >
+              </div>
+              <app-button variant="success" iconRight="pi pi-arrow-right" class="newsletter-btn">
+                S'abonner
+              </app-button>
+            </div>
+            <p class="newsletter-note">
+              <span class="note-icon"><i class="fas fa-shield-alt"></i></span>
+              Vos données sont protégées. Pas de spam.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <div class="container">
+      <div class="bottom-content">
+        <div class="copyright">
+          <span class="copyright-icon"><i class="far fa-copyright"></i></span>
+          <span class="copyright-text">{{currentYear}} <strong>EduManager</strong>. Tous droits réservés.</span>
+          <span class="made-with">Fait avec <span class="heart"><i class="fas fa-heart"></i></span> au Maroc</span>
+        </div>
+        <div class="bottom-links">
+          <a routerLink="/privacy" class="bottom-link">
+            <span class="link-icon"><i class="fas fa-lock"></i></span>
+            <span>Confidentialité</span>
+          </a>
+          <a routerLink="/terms" class="bottom-link">
+            <span class="link-icon"><i class="fas fa-file-contract"></i></span>
+            <span>CGU</span>
+          </a>
+          <a routerLink="/cookies" class="bottom-link">
+            <span class="link-icon"><i class="fas fa-cookie-bite"></i></span>
+            <span>Cookies</span>
+          </a>
+          <a routerLink="/accessibility" class="bottom-link">
+            <span class="link-icon"><i class="fas fa-universal-access"></i></span>
+            <span>Accessibilité</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated Background -->
+  <div class="footer-bg">
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+  </div>
+</footer>

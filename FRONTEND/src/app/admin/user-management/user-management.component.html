@@ -1,0 +1,264 @@
+<div class="management-container">
+  <!-- Header -->
+  <div class="header">
+    <h1 class="title">
+      <i class="pi pi-users"></i>
+      Gestion des Utilisateurs
+    </h1>
+    <app-button variant="ghost" icon="pi pi-refresh" (clicked)="loadUsers()">
+      Actualiser
+    </app-button>
+  </div>
+
+  <!-- Filters -->
+  <app-card variant="elevated" padding="md">
+    <div class="filters">
+      <div class="filter-group">
+        <label class="filter-label">Recherche</label>
+        <input 
+          type="text" 
+          class="filter-input" 
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onFilterChange()"
+          placeholder="Nom, prénom ou email..."
+        >
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Statut</label>
+        <select class="filter-select" [(ngModel)]="filterStatus" (ngModelChange)="onFilterChange()">
+          <option value="all">Tous</option>
+          <option value="approved">Approuvés</option>
+          <option value="pending">En attente</option>
+          <option value="rejected">Rejetés</option>
+          <option value="suspended">Suspendus</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Rôle</label>
+        <select class="filter-select" [(ngModel)]="filterRole" (ngModelChange)="onFilterChange()">
+          <option value="all">Tous</option>
+          <option value="super-admin">Super Admin</option>
+          <option value="admin">Admin</option>
+          <option value="teacher">Enseignant</option>
+          <option value="student">Étudiant</option>
+          <option value="user">Utilisateur</option>
+        </select>
+      </div>
+      <div class="filter-group" style="align-self: end; display: flex; gap: .5rem;">
+        <app-button 
+          variant="primary" 
+          icon="pi pi-filter" 
+          (clicked)="filterStatus='pending'; onFilterChange()"
+          title="Afficher uniquement les demandes d'inscription en attente">
+          Voir les demandes
+        </app-button>
+        <app-button 
+          variant="secondary" 
+          icon="pi pi-list" 
+          (clicked)="resetFilters()"
+          title="Afficher tous les utilisateurs">
+          Voir tous
+        </app-button>
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Loading State -->
+  <app-card *ngIf="loading" variant="elevated" padding="lg">
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <p>Chargement des utilisateurs...</p>
+    </div>
+  </app-card>
+
+  <!-- Empty State -->
+  <app-card *ngIf="!loading && filteredUsers.length === 0" variant="elevated" padding="lg">
+    <app-empty-state
+      icon="pi pi-users"
+      title="Aucun utilisateur trouvé"
+      message="Aucun utilisateur ne correspond à vos critères de recherche."
+    />
+  </app-card>
+
+  <!-- Users Table -->
+  <app-card *ngIf="!loading && filteredUsers.length > 0" variant="elevated" padding="md">
+    <div class="table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Inscription</th>
+            <th>Stats</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">
+                  {{ user.prenom.charAt(0) }}{{ user.nom.charAt(0) }}
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
+                  <span class="user-meta" *ngIf="user.contact?.ville">📍 {{ user.contact?.ville }}</span>
+                </div>
+              </div>
+            </td>
+            <td>{{ user.mail }}</td>
+            <td>
+              <span [class]="'badge ' + getRoleBadgeClass(user.role)">
+                {{ getRoleLabel(user.role) }}
+              </span>
+            </td>
+            <td>
+              <span [class]="'badge ' + getStatusBadgeClass(user.accountStatus)">
+                {{ getStatusLabel(user.accountStatus) }}
+              </span>
+            </td>
+            <td>{{ getCreationDate(user.createdAt) }}</td>
+            <td>
+              <div class="stats-cell">
+                <span title="Étudiants créés">📝 {{ user.stats?.studentsCreated || 0 }}</span>
+                <span title="Étudiants modifiés">✏️ {{ user.stats?.studentsModified || 0 }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <app-button 
+                  variant="ghost" 
+                  size="sm" 
+                  icon="pi pi-pencil"
+                  (clicked)="openEditModal(user)"
+                  title="Modifier">
+                </app-button>
+                <app-button 
+                  *ngIf="user.accountStatus === 'pending'"
+                  variant="success" 
+                  size="sm" 
+                  icon="pi pi-check"
+                  (clicked)="approveUser(user)"
+                  title="Approuver">
+                </app-button>
+                <app-button 
+                  *ngIf="user.accountStatus === 'pending'"
+                  variant="warning" 
+                  size="sm" 
+                  icon="pi pi-times"
+                  (clicked)="rejectUser(user)"
+                  title="Refuser">
+                </app-button>
+                <app-button 
+                  *ngIf="user.accountStatus !== 'suspended' && user.role !== 'super-admin'"
+                  variant="warning" 
+                  size="sm" 
+                  icon="pi pi-ban"
+                  (clicked)="suspend(user)"
+                  title="Suspendre">
+                </app-button>
+                <app-button 
+                  *ngIf="user.accountStatus === 'suspended'"
+                  variant="success" 
+                  size="sm" 
+                  icon="pi pi-refresh"
+                  (clicked)="reactivate(user)"
+                  title="Réactiver">
+                </app-button>
+                <app-button 
+                  *ngIf="user.role !== 'super-admin'"
+                  variant="danger" 
+                  size="sm" 
+                  icon="pi pi-trash"
+                  (clicked)="openDeleteConfirm(user)"
+                  title="Supprimer">
+                </app-button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </app-card>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier l'utilisateur</h2>
+      <button class="close-btn" (click)="closeEditModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="editingUser">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" [(ngModel)]="editingUser.prenom" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" [(ngModel)]="editingUser.nom" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="editingUser.mail" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Rôle</label>
+          <select [(ngModel)]="editingUser.role" class="form-input">
+            <option value="user">Utilisateur</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Enseignant</option>
+            <option value="student">Étudiant</option>
+            <option value="super-admin" *ngIf="editingUser.role === 'super-admin'">Super Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Statut du compte</label>
+          <select [(ngModel)]="editingUser.accountStatus" class="form-input">
+            <option value="approved">Approuvé</option>
+            <option value="pending">En attente</option>
+            <option value="rejected">Rejeté</option>
+            <option value="suspended">Suspendu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="editingUser.isActive">
+            Compte actif
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <app-button variant="ghost" (clicked)="closeEditModal()">Annuler</app-button>
+      <app-button variant="primary" icon="pi pi-check" (clicked)="saveUser()">Enregistrer</app-button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="modal modal-small" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Confirmer la suppression</h2>
+      <button class="close-btn" (click)="closeDeleteConfirm()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="userToDelete">
+      <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ userToDelete.prenom }} {{ userToDelete.nom }}</strong> ?</p>
+      <p class="warning-text">Cette action est irréversible.</p>
+    </div>
+    <div class="modal-footer">
+      <app-button variant="ghost" (clicked)="closeDeleteConfirm()">Annuler</app-button>
+      <app-button variant="danger" icon="pi pi-trash" (clicked)="confirmDelete()">Supprimer</app-button>
+    </div>
+  </div>
+</div>

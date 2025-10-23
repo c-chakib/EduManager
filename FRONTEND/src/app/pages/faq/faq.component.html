@@ -1,0 +1,61 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-content">
+      <nav class="breadcrumb">
+        <a routerLink="/" class="breadcrumb-link">
+          <i class="fas fa-home"></i> Accueil
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">FAQ</span>
+      </nav>
+      <h1 class="page-title">
+        <i class="fas fa-question-circle"></i>
+        Questions fréquentes
+      </h1>
+      <p class="page-description">
+        Trouvez rapidement des réponses aux questions les plus courantes
+      </p>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="faq-container">
+      <div class="faq-category" *ngFor="let category of faqs; let i = index">
+        <div class="category-header">
+          <i [class]="category.icon"></i>
+          <h2>{{category.category}}</h2>
+        </div>
+        <div class="questions-list">
+          <div class="faq-item" *ngFor="let q of category.questions; let j = index">
+            <button class="question-button" (click)="toggleQuestion(i, j)"
+                    [class.active]="q.isOpen">
+              <span class="question-text">{{q.question}}</span>
+              <i class="fas fa-chevron-down toggle-icon" [class.rotated]="q.isOpen"></i>
+            </button>
+            <div class="answer" [class.open]="q.isOpen">
+              <p>{{q.answer}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-links-section">
+      <h2 class="section-title">Vous n'avez pas trouvé de réponse ?</h2>
+      <div class="links-grid">
+        <a routerLink="/documentation" class="quick-link">
+          <i class="fas fa-book"></i>
+          <span>Consulter la documentation</span>
+        </a>
+        <a routerLink="/guide" class="quick-link">
+          <i class="fas fa-book-open"></i>
+          <span>Guide d'utilisation</span>
+        </a>
+        <a routerLink="/support" class="quick-link">
+          <i class="fas fa-life-ring"></i>
+          <span>Contacter le support</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
