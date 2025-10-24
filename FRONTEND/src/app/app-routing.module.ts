@@ -17,6 +17,7 @@ import { CookiesComponent } from './pages/cookies/cookies.component';
 import { AccessibilityComponent } from './pages/accessibility/accessibility.component';
 import { AdminApprovalsComponent } from './admin/admin-approvals/admin-approvals.component';
 import { UserManagementComponent } from './admin/user-management/user-management.component';
+import { ChatPageComponent } from './pages/chat/chat.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -54,6 +55,11 @@ const routes: Routes = [
     component: UserManagementComponent,
     canActivate: [RoleGuard],
     data: { roles: ['super-admin'] }
+  },
+  {
+    path: 'chat',
+    component: ChatPageComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'etudiants',

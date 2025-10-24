@@ -122,7 +122,6 @@ userSchema.virtual('isLocked').get(function() {
 });
 
 // Index pour améliorer les performances de recherche
-userSchema.index({ mail: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ createdAt: -1 });

@@ -19,6 +19,11 @@ export class SocketService {
     this.socket.on('connect_error', (error: any) => {
       console.error('[Socket.io] Connection error:', error);
     });
+
+    // Debug: Listen to all events
+    this.socket.onAny((event: string, ...args: any[]) => {
+      console.log('[Socket.io] Received event:', event, args);
+    });
   }
 
   onStudentCreated(): Observable<any> {
@@ -69,8 +74,59 @@ export class SocketService {
     });
   }
 
-  disconnect() {
-    this.socket.disconnect();
+  // Online users and chat methods
+  userOnline(userData: any): void {
+    this.socket.emit('userOnline', userData);
+  }
+
+  onUserOnline(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userOnline', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserOffline(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userOffline', (data: any) => observer.next(data));
+    });
+  }
+
+  onOnlineUsers(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('onlineUsers', (data: any) => observer.next(data));
+    });
+  }
+
+  sendMessage(messageData: any): void {
+    this.socket.emit('sendMessage', messageData);
+  }
+
+  onReceiveMessage(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('receiveMessage', (data: any) => observer.next(data));
+    });
+  }
+
+  onMessageSent(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('messageSent', (data: any) => observer.next(data));
+    });
+  }
+
+  onChatHistory(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('chatHistory', (data: any) => observer.next(data));
+    });
+  }
+
+  sendTyping(data: any): void {
+    this.socket.emit('typing', data);
+  }
+
+  onUserTyping(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userTyping', (data: any) => observer.next(data));
+    });
   }
 
 }

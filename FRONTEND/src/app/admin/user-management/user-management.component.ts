@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { SocketService } from '../../services/socket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-management',
@@ -10,7 +12,7 @@ import { ToastService } from '../../shared/services/toast.service';
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css']
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, OnDestroy {
   users: User[] = [];
   filteredUsers: User[] = [];
   loading = false;
@@ -28,14 +30,198 @@ export class UserManagementComponent implements OnInit {
   showDeleteConfirm = false;
   userToDelete: User | null = null;
 
+  // Notifications
+  notifications: any[] = [];
+  showNotifications = false;
+  private subscription = new Subscription();
+
   constructor(
     private authService: AuthService,
     private logger: LoggerService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private socketService: SocketService
   ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.setupSocketListeners();
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  private setupSocketListeners(): void {
+    console.log('[UserManagement] Setting up socket listeners');
+
+    // Listen for user management events
+    this.subscription.add(
+      this.socketService.onUserCreated().subscribe((data: any) => {
+        console.log('[UserManagement] Received userCreated event:', data);
+        this.addNotification('Création utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserUpdated().subscribe((data: any) => {
+        console.log('[UserManagement] Received userUpdated event:', data);
+        this.addNotification('Modification utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserDeleted().subscribe((data: any) => {
+        console.log('[UserManagement] Received userDeleted event:', data);
+        this.addNotification('Suppression utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserApproved().subscribe((data: any) => {
+        console.log('[UserManagement] Received userApproved event:', data);
+        this.addNotification('Approbation utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserRejected().subscribe((data: any) => {
+        console.log('[UserManagement] Received userRejected event:', data);
+        this.addNotification('Rejet utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    // Listen for student management events
+    this.subscription.add(
+      this.socketService.onStudentUpdated().subscribe((data: any) => {
+        console.log('[UserManagement] Received studentUpdated event:', data);
+        this.addNotification('Modification étudiant', data);
+        // Optionally refresh students list here
+      })
+    );
+    this.subscription.add(
+      this.socketService.onStudentDeleted().subscribe((data: any) => {
+        console.log('[UserManagement] Received studentDeleted event:', data);
+        this.addNotification('Suppression étudiant', data);
+        // Optionally refresh students list here
+      })
+    );
+  }
+
+  private addNotification(action: string, data: any): void {
+    // Extract user info from the data structure
+    let user = 'Inconnu';
+    let performedBy = 'Système';
+    let summary = '';
+
+    if (data) {
+      // For student events
+      if (action.includes('étudiant')) {
+        // Try to extract student name or id
+        if (data.nom || data.prenom) {
+          user = `${data.nom || ''} ${data.prenom || ''}`.trim();
+        } else if (data.student && (data.student.nom || data.student.prenom)) {
+          user = `${data.student.nom || ''} ${data.student.prenom || ''}`.trim();
+        } else if (data.student && data.student.id) {
+          user = `ID: ${data.student.id}`;
+        } else if (data.id) {
+          user = `ID: ${data.id}`;
+        }
+        // Try to extract who performed the action
+        if (data.updatedBy) {
+          performedBy = `${data.updatedBy.nom || ''} ${data.updatedBy.prenom || ''}`.trim() || data.updatedBy.role || 'Utilisateur';
+        } else if (data.deletedBy) {
+          performedBy = `${data.deletedBy.nom || ''} ${data.deletedBy.prenom || ''}`.trim() || data.deletedBy.role || 'Utilisateur';
+        }
+        // Details for modification
+        if (action.includes('Modification')) {
+          if (data.changes && Object.keys(data.changes).length > 0) {
+            const changedFields = Object.keys(data.changes).join(', ');
+            summary = `${user} - Champs modifiés: ${changedFields}`;
+          } else {
+            summary = `Modifications sur: ${user}`;
+          }
+        } else if (action.includes('Suppression')) {
+          summary = `Étudiant supprimé: ${user}`;
+        }
+      } else {
+        // For user events (existing logic)
+        if (data.updatedBy) {
+          performedBy = `${data.updatedBy.nom || ''} ${data.updatedBy.prenom || ''}`.trim() || data.updatedBy.role || 'Utilisateur';
+        } else if (data.deletedBy) {
+          performedBy = `${data.deletedBy.nom || ''} ${data.deletedBy.prenom || ''}`.trim() || data.deletedBy.role || 'Utilisateur';
+        } else if (data.approvedBy) {
+          performedBy = `${data.approvedBy.nom || ''} ${data.approvedBy.prenom || ''}`.trim() || data.approvedBy.role || 'Utilisateur';
+        } else if (data.rejectedBy) {
+          performedBy = `${data.rejectedBy.nom || ''} ${data.rejectedBy.prenom || ''}`.trim() || data.rejectedBy.role || 'Utilisateur';
+        }
+        if (data.user) {
+          user = `${data.user.nom || ''} ${data.user.prenom || ''}`.trim() || data.user.mail || data.user.role || 'Utilisateur';
+        }
+        if (action.includes('Création')) {
+          summary = `Nouveau compte: ${user}`;
+        } else if (action.includes('Modification')) {
+          if (data.changes && Object.keys(data.changes).length > 0) {
+            const changedFields = Object.keys(data.changes).join(', ');
+            summary = `${user} - Champs modifiés: ${changedFields}`;
+          } else {
+            summary = `Modifications sur: ${user}`;
+          }
+        } else if (action.includes('Suppression')) {
+          summary = `Compte supprimé: ${user}`;
+        } else if (action.includes('Approbation')) {
+          summary = `Compte approuvé: ${user}`;
+        } else if (action.includes('Rejet')) {
+          summary = `Compte rejeté: ${user}${data.reason ? ` - Raison: ${data.reason}` : ''}`;
+        }
+      }
+    }
+
+    const notification = {
+      id: Date.now(),
+      action,
+      user: performedBy,
+      time: new Date(),
+      details: summary,
+      read: false
+    };
+
+    this.notifications.unshift(notification);
+
+    // Keep only last 10 notifications
+    if (this.notifications.length > 10) {
+      this.notifications = this.notifications.slice(0, 10);
+    }
+
+    // Auto-show notifications for 5 seconds
+    this.showNotifications = true;
+    setTimeout(() => {
+      this.showNotifications = false;
+    }, 5000);
+  }
+
+  markNotificationAsRead(notificationId: number): void {
+    const notification = this.notifications.find(n => n.id === notificationId);
+    if (notification) {
+      notification.read = true;
+    }
+  }
+
+  clearNotifications(): void {
+    this.notifications = [];
+    this.showNotifications = false;
+  }
+
+  toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  get unreadNotificationsCount(): number {
+    return this.notifications.filter(n => !n.read).length;
   }
 
   loadUsers(): void {

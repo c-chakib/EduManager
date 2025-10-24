@@ -1,0 +1,71 @@
+<div class="chat-container">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div class="chat-info">
+      <div class="chat-icon">
+        <i class="pi pi-users"></i>
+      </div>
+      <div class="chat-details">
+        <div class="chat-name">Chat Général</div>
+        <div class="chat-description">Discussion avec tous les utilisateurs connectés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages-container" #messagesContainer>
+    <div class="messages-list">
+      <div
+        class="message-item"
+        *ngFor="let message of messages"
+        [class.my-message]="isMyMessage(message)">
+        <div class="message-content">
+          <div class="message-sender" *ngIf="!isMyMessage(message)">{{ message.senderName }}</div>
+          <div class="message-text">{{ message.content }}</div>
+          <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" *ngIf="otherUserTyping">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="typing-text">{{ typingUserName }} tape...</div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="no-messages" *ngIf="messages.length === 0 && !otherUserTyping">
+      <i class="pi pi-comments"></i>
+      <p>Commencez une conversation...</p>
+    </div>
+  </div>
+
+  <!-- Message Input -->
+  <div class="message-input-container">
+    <div class="input-wrapper">
+      <textarea
+        #messageInput
+        class="message-input"
+        [(ngModel)]="newMessage"
+        (input)="onTyping()"
+        (keypress)="onKeyPress($event)"
+        placeholder="Tapez votre message..."
+        rows="1"
+        maxlength="500"></textarea>
+      <button
+        class="send-button"
+        [disabled]="!newMessage.trim()"
+        (click)="sendMessage()"
+        title="Envoyer">
+        <i class="pi pi-send"></i>
+      </button>
+    </div>
+    <div class="input-footer">
+      <span class="character-count">{{ newMessage.length }}/500</span>
+    </div>
+  </div>
+</div>

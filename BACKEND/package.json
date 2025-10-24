@@ -8,6 +8,7 @@
     "db:diagnose": "node ./scripts/diagnoseDb.js",
     "db:restore": "node ./scripts/restoreStudents.js",
     "db:seed": "node ./scripts/seedStudents.js",
+    "messages:seed": "node ./scripts/seedMessages.js",
     "user:create": "node ./scripts/createUser.js",
     "user:super-admin": "node ./scripts/createSuperAdmin.js",
     "db:list": "node ./scripts/listAllDbs.js",

@@ -5,9 +5,61 @@
       <i class="pi pi-users"></i>
       Gestion des Utilisateurs
     </h1>
-    <app-button variant="ghost" icon="pi pi-refresh" (clicked)="loadUsers()">
-      Actualiser
-    </app-button>
+    <div class="header-actions">
+      <app-button variant="ghost" icon="pi pi-refresh" (clicked)="loadUsers()">
+        Actualiser
+      </app-button>
+
+      <!-- Notifications -->
+      <div class="notification-container">
+        <button
+          class="notification-toggle"
+          (click)="toggleNotifications()"
+          [class.active]="showNotifications">
+          <i class="pi pi-bell"></i>
+          <span class="notification-badge" *ngIf="unreadNotificationsCount > 0">
+            {{ unreadNotificationsCount }}
+          </span>
+        </button>
+
+        <!-- Notification Popup -->
+        <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notification-header">
+            <h4>Notifications récentes</h4>
+            <button class="clear-btn" (click)="clearNotifications()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          <div class="notification-list">
+            <div
+              class="notification-item"
+              *ngFor="let notification of notifications"
+              [class.unread]="!notification.read"
+              (click)="markNotificationAsRead(notification.id)">
+              <div class="notification-icon">
+                <i class="pi pi-info-circle" *ngIf="notification.action.includes('Création')"></i>
+                <i class="pi pi-pencil" *ngIf="notification.action.includes('Modification')"></i>
+                <i class="pi pi-trash" *ngIf="notification.action.includes('Suppression')"></i>
+                <i class="pi pi-check" *ngIf="notification.action.includes('Approbation')"></i>
+                <i class="pi pi-times" *ngIf="notification.action.includes('Rejet')"></i>
+              </div>
+              <div class="notification-content">
+                <div class="notification-title">{{ notification.action }}</div>
+                <div class="notification-details">{{ notification.details }}</div>
+                <div class="notification-meta">
+                  <span class="notification-user">par {{ notification.user }}</span>
+                  <span class="notification-time">{{ notification.time | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="notification-empty" *ngIf="notifications.length === 0">
+              <i class="pi pi-bell"></i>
+              <p>Aucune notification récente</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -46,7 +98,7 @@
           <option value="user">Utilisateur</option>
         </select>
       </div>
-      <div class="filter-group" style="align-self: end; display: flex; gap: .5rem;">
+      <div class="filter-group filter-actions">
         <app-button 
           variant="primary" 
           icon="pi pi-filter" 
