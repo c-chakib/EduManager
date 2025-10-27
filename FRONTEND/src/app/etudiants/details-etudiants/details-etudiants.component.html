@@ -60,9 +60,16 @@
         <!-- Avatar -->
         <div class="avatar-section">
           <img 
-            [src]="etudiant.photo || 'https://ui-avatars.com/api/?name=' + etudiant.prenom + '+' + etudiant.nom + '&size=200&background=3b82f6&color=fff'" 
+            [src]="getPhotoUrl(etudiant.photo)"
             [alt]="'Photo de ' + etudiant.prenom + ' ' + etudiant.nom"
             class="student-avatar">
+          
+          <!-- Photo Upload in Edit Mode -->
+          <div *ngIf="isEditing" class="photo-upload-section">
+            <input type="file" accept="image/*" (change)="onPhotoSelected($event)" />
+            <small class="photo-upload-hint">Choisir une nouvelle photo</small>
+          </div>
+          
           <h2 class="student-name">{{ etudiant.prenom }} {{ etudiant.nom }}</h2>
           <app-badge 
             [variant]="getStatusVariant(etudiant.statut || 'actif')"
@@ -387,12 +394,12 @@
         padding="md">
         <div class="matieres-list">
           <app-badge 
-            *ngFor="let matiere of etudiant.matieres"
+            *ngFor="let matiere of getMatieresArray(etudiant.matieres)"
             variant="info"
             size="lg">
             {{ matiere }}
           </app-badge>
-          <p *ngIf="!etudiant.matieres || etudiant.matieres.length === 0" class="no-data">
+          <p *ngIf="getMatieresArray(etudiant.matieres).length === 0" class="no-data">
             Aucune matière enregistrée
           </p>
         </div>

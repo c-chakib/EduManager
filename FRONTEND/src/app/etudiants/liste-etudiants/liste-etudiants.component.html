@@ -8,13 +8,13 @@
 
   <!-- Header -->
   <div class="header-section">
-  <h1 id="students-title">Liste des Étudiants</h1>
+    <h1 id="students-title">Liste des Étudiants</h1>
 
     <div class="header-right">
       <div class="counter">
         <app-badge variant="info" size="lg">{{ pagedEtudiants.length }}</app-badge>
         <span class="sep">/</span>
-  <app-badge variant="primary" size="lg">{{ totalCount }}</app-badge>
+        <app-badge variant="primary" size="lg">{{ totalCount }}</app-badge>
       </div>
 
       <app-button 
@@ -48,7 +48,7 @@
       </button>
     </label>
 
-      <label class="field matiere-filter" [class.open]="showMatiereDropdown" aria-label="Filtrer par matière">
+    <label class="field matiere-filter" [class.open]="showMatiereDropdown" aria-label="Filtrer par matière">
       <i class="pi pi-filter" aria-hidden="true"></i>
       <div class="multi-select-wrapper">
         <button type="button" class="multi-select-toggle" (click)="toggleMatiereDropdown()">
@@ -115,8 +115,6 @@
     </ng-container>
     <app-button variant="ghost" size="sm" icon="pi pi-times" (clicked)="clearFilters()">Tout effacer</app-button>
   </div>
-
-  
 
   <!-- Error -->
   <app-alert 
@@ -212,7 +210,7 @@
 
   <!-- IMPROVED GRID -->
   <form>
-  <div class="students-grid" *ngIf="!loading && !error && pagedEtudiants.length">
+    <div class="students-grid" *ngIf="!loading && !error && pagedEtudiants.length">
       <!-- Enhanced Bulk Actions Bar with Select All -->
       <div class="bulk-actions-bar" *ngIf="pagedEtudiants.length > 0">
         <div class="bulk-select">
@@ -261,6 +259,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Student Cards -->
       <article
         class="student-card"
         *ngFor="let etudiant of pagedEtudiants; trackBy: trackById"
@@ -270,109 +270,110 @@
         role="group"
       >
         <input type="checkbox" [(ngModel)]="etudiant.selected" name="selected_{{etudiant.id}}" (change)="toggleStudentSelection(etudiant)" class="student-select-checkbox" />
-      <!-- Header with Avatar and Basic Info -->
-      <div class="student-card__header">
-        <a
-          class="avatar-link"
-          [routerLink]="getDetailsRoute(etudiant.id!)"
-          [attr.aria-label]="'Ouvrir la fiche de ' + etudiant.prenom + ' ' + etudiant.nom"
-        >
-          <ng-container *ngIf="etudiant.photo && etudiant.photo !== 'Picture unavailable'; else initials">
-            <img
-              [src]="etudiant.photo"
-              [alt]="'Photo de ' + etudiant.prenom + ' ' + etudiant.nom"
-              class="student-card__avatar"
-              loading="lazy"
-              decoding="async"
-              (error)="$any($event).target.style.display='none'"
-            />
-          </ng-container>
-          <ng-template #initials>
-            <div class="student-card__avatar student-card__avatar--initials" aria-hidden="true">
-              {{ (etudiant.prenom[0] || '') + (etudiant.nom[0] || '') | uppercase }}
-            </div>
-          </ng-template>
-        </a>
+        
+        <!-- Header with Avatar and Basic Info -->
+        <div class="student-card__header">
+          <a
+            class="avatar-link"
+            [routerLink]="getDetailsRoute(etudiant.id!)"
+            [attr.aria-label]="'Ouvrir la fiche de ' + etudiant.prenom + ' ' + etudiant.nom"
+          >
+            <ng-container *ngIf="etudiant.photo && etudiant.photo !== 'Picture unavailable'; else initials">
+              <img
+                [src]="getPhotoUrl(etudiant.photo, etudiant)"
+                [alt]="'Photo de ' + etudiant.prenom + ' ' + etudiant.nom"
+                class="student-card__avatar"
+                loading="lazy"
+                decoding="async"
+                (error)="$any($event).target.style.display='none'"
+              />
+            </ng-container>
+            <ng-template #initials>
+              <div class="student-card__avatar student-card__avatar--initials" aria-hidden="true">
+                {{ (etudiant.prenom[0] || '') + (etudiant.nom[0] || '') | uppercase }}
+              </div>
+            </ng-template>
+          </a>
 
-        <div class="student-card__info">
-          <h2 class="student-card__name">
-            {{ etudiant.prenom }} {{ etudiant.nom }}
-          </h2>
-          <p class="student-card__id">ID: {{ etudiant.id }}</p>
-          <p class="student-card__email">{{ etudiant.mail }}</p>
-        </div>
-      </div>
-
-      <!-- Content -->
-      <div class="student-card__content">
-        <!-- Subjects -->
-        <div class="student-card__subjects" *ngIf="etudiant.matieres?.length; else noSubjects">
-          <h3 class="subjects-title">
-            <i class="pi pi-book" aria-hidden="true"></i>
-            Matières ({{ etudiant.matieres.length }})
-          </h3>
-          <div class="subjects-list">
-            <app-badge 
-              variant="secondary"
-              *ngFor="let matiere of etudiant.matieres.slice(0, 3)" 
-              [title]="matiere">
-              {{ matiere }}
-            </app-badge>
-            <app-badge 
-              variant="info"
-              *ngIf="etudiant.matieres.length > 3"
-              [title]="etudiant.matieres.slice(3).join(', ')">
-              +{{ etudiant.matieres.length - 3 }}
-            </app-badge>
+          <div class="student-card__info">
+            <h2 class="student-card__name">
+              {{ etudiant.prenom }} {{ etudiant.nom }}
+            </h2>
+            <p class="student-card__id">ID: {{ etudiant.id }}</p>
+            <p class="student-card__email">{{ etudiant.mail }}</p>
           </div>
         </div>
-        <ng-template #noSubjects>
-          <div class="student-card__subjects">
+
+        <!-- Content -->
+        <div class="student-card__content">
+          <!-- Subjects -->
+          <div class="student-card__subjects" *ngIf="etudiant.matieres?.length; else noSubjects">
             <h3 class="subjects-title">
               <i class="pi pi-book" aria-hidden="true"></i>
-              Aucune matière
+              Matières ({{ etudiant.matieres.length }})
             </h3>
-            <p class="no-subjects-text">Aucune matière assignée</p>
+            <div class="subjects-list">
+              <app-badge 
+                variant="secondary"
+                *ngFor="let matiere of etudiant.matieres.slice(0, 3)" 
+                [title]="matiere">
+                {{ matiere }}
+              </app-badge>
+              <app-badge 
+                variant="info"
+                *ngIf="etudiant.matieres.length > 3"
+                [title]="etudiant.matieres.slice(3).join(', ')">
+                +{{ etudiant.matieres.length - 3 }}
+              </app-badge>
+            </div>
           </div>
-        </ng-template>
+          <ng-template #noSubjects>
+            <div class="student-card__subjects">
+              <h3 class="subjects-title">
+                <i class="pi pi-book" aria-hidden="true"></i>
+                Aucune matière
+              </h3>
+              <p class="no-subjects-text">Aucune matière assignée</p>
+            </div>
+          </ng-template>
 
-        <!-- Date -->
-        <div class="student-card__date" *ngIf="etudiant.createdAt">
-          <i class="pi pi-calendar" aria-hidden="true"></i>
-          <span>Ajouté le {{ etudiant.createdAt | date:'dd/MM/yyyy' }}</span>
+          <!-- Date -->
+          <div class="student-card__date" *ngIf="etudiant.createdAt">
+            <i class="pi pi-calendar" aria-hidden="true"></i>
+            <span>Ajouté le {{ etudiant.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
         </div>
-      </div>
 
-      <!-- Actions -->
-      <div class="student-card__actions" style="display: flex; gap: 0.5rem;">
-        <app-button 
-          variant="primary"
-          icon="pi pi-eye"
-          [routerLink]="getDetailsRoute(etudiant.id!)">
-          Voir détails
-        </app-button>
-        <app-button 
-          *ngIf="canEditStudents()"
-          variant="ghost"
-          icon="pi pi-pencil"
-          size="sm"
-          (clicked)="editStudent(etudiant)"
-          [ariaLabel]="'Modifier ' + etudiant.prenom + ' ' + etudiant.nom">
-        </app-button>
-        <app-button 
-          *ngIf="canEditStudents()"
-          variant="danger"
-          icon="pi pi-trash"
-          size="sm"
-          (clicked)="openDeleteConfirm(etudiant)"
-          [ariaLabel]="'Supprimer ' + etudiant.prenom + ' ' + etudiant.nom">
-        </app-button>
-      </div>
-    </article>
-  </div>
+        <!-- Actions -->
+        <div class="student-card__actions" style="display: flex; gap: 0.5rem;">
+          <app-button 
+            variant="primary"
+            icon="pi pi-eye"
+            [routerLink]="getDetailsRoute(etudiant.id!)">
+            Voir détails
+          </app-button>
+          <app-button 
+            *ngIf="canEditStudents()"
+            variant="ghost"
+            icon="pi pi-pencil"
+            size="sm"
+            (clicked)="editStudent(etudiant)"
+            [ariaLabel]="'Modifier ' + etudiant.prenom + ' ' + etudiant.nom">
+          </app-button>
+          <app-button 
+            *ngIf="canEditStudents()"
+            variant="danger"
+            icon="pi pi-trash"
+            size="sm"
+            (clicked)="openDeleteConfirm(etudiant)"
+            [ariaLabel]="'Supprimer ' + etudiant.prenom + ' ' + etudiant.nom">
+          </app-button>
+        </div>
+      </article>
+    </div>
 
-  <!-- Pagination moderne -->
-  <nav *ngIf="!loading && !error && pagedEtudiants.length" class="pagination-bar" aria-label="Pagination">
+    <!-- Pagination moderne -->
+    <nav *ngIf="!loading && !error && pagedEtudiants.length" class="pagination-bar" aria-label="Pagination">
       <ul class="pagination-list" *ngIf="!isShowingAll">
         <li>
           <button type="button" class="pagination-btn" (click)="goToPage(pageIndex - 1)" [disabled]="pageIndex === 0" aria-label="Page précédente">
@@ -411,15 +412,14 @@
   </form>
 
   <!-- Confirmation Modal -->
-<div *ngIf="showDeleteConfirm" class="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40">
-  <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-    <h3 class="font-bold text-lg mb-2">Confirmer la suppression</h3>
-    <p class="mb-4">Êtes-vous sûr de vouloir supprimer <span class="font-semibold">{{ studentToDelete?.prenom }} {{ studentToDelete?.nom }}</span> ? Cette action est irréversible.</p>
-    <div class="flex gap-3 justify-end">
-      <button type="button" class="btn btn-secondary" (click)="showDeleteConfirm=false">Annuler</button>
-      <button type="button" class="btn btn-danger" (click)="confirmDeleteStudent()">Supprimer</button>
+  <div *ngIf="showDeleteConfirm" class="fixed inset-0 z-[10001] flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+      <h3 class="font-bold text-lg mb-2">Confirmer la suppression</h3>
+      <p class="mb-4">Êtes-vous sûr de vouloir supprimer <span class="font-semibold">{{ studentToDelete?.prenom }} {{ studentToDelete?.nom }}</span> ? Cette action est irréversible.</p>
+      <div class="flex gap-3 justify-end">
+        <button type="button" class="btn btn-secondary" (click)="showDeleteConfirm=false">Annuler</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteStudent()">Supprimer</button>
+      </div>
     </div>
   </div>
-</div>
 </section>
-

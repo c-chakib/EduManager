@@ -46,10 +46,11 @@ export class GoogleAuthService {
       // Load Google Identity Services
       google.accounts.id.initialize({
         client_id: clientId,
+        auto_select: false,
+        prompt: 'select_account',
         callback: (response: any) => {
           this.handleCredentialResponse(response);
         },
-        auto_select: false,
         cancel_on_tap_outside: true
       });
 
@@ -87,7 +88,7 @@ export class GoogleAuthService {
   /**
    * Handle the credential response from Google
    */
-  private handleCredentialResponse(response: any): void {
+  public handleCredentialResponse(response: any): void {
     try {
       // Store the credential (ID token)
       this.currentCredential = response.credential;

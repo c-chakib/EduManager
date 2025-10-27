@@ -28,21 +28,39 @@ export class AuthInterceptor implements HttpInterceptor {
     // Ajouter le token uniquement aux requêtes API qui en ont besoin (skip auth and demo requests)
     if (token && !isAuthRequest && !isDemoRequest && isApiRequest) {
       this.logger.debug('AuthInterceptor: Adding Authorization header', { url: request.url, token });
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      // Only set Content-Type if not FormData
+      if (!(request.body instanceof FormData)) {
+        request = request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+      } else {
+        request = request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+      }
     } else if (isApiRequest) {
       this.logger.debug('AuthInterceptor: No token or public request, sending basic headers', { url: request.url, isDemoRequest });
-      request = request.clone({
-        setHeaders: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      if (!(request.body instanceof FormData)) {
+        request = request.clone({
+          setHeaders: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+      } else {
+        request = request.clone({
+          setHeaders: {
+            'Accept': 'application/json'
+          }
+        });
+      }
     }
 
     return next.handle(request).pipe(

@@ -234,6 +234,20 @@ export class AuthService {
   }
 
   /**
+   * Google Sign-In
+   */
+  googleSignIn(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/google-signin`, { idToken }).pipe(
+      tap(response => {
+        this.logger.info('Google login successful', response);
+        this.handleAuthSuccess(response);
+        // Always refresh user info after login
+        this.refreshCurrentUser().subscribe();
+      })
+    );
+  }
+
+  /**
    * Obtenir l'utilisateur actuel
    */
   getCurrentUser(): User | null {

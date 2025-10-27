@@ -6,6 +6,10 @@ import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../models/user.model';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { GoogleAuthService, GoogleUser } from '../../services/google-auth.service';
+import { environment } from '../../../environments/environment';
+
+declare var google: any;
 
 @Component({
   selector: 'app-login',
@@ -14,6 +18,49 @@ import { ToastService } from '../../shared/services/toast.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  get mail() {
+    return this.loginForm.get('mail');
+  }
+
+  get password() {
+    return this.loginForm.get('password');
+  }
+
+  onSubmit(): void {
+    if (this.loginForm.valid) {
+      this.loading = true;
+      this.error = '';
+      const credentials = {
+        mail: this.loginForm.value.mail,
+        password: this.loginForm.value.password
+      };
+      this.authService.login(credentials).subscribe(
+        () => {
+          this.toastService.success('Connexion réussie !', 'Bienvenue', 3000);
+          const returnUrl = this.returnUrl || '/dashboard';
+          this.router.navigate([returnUrl]);
+        },
+        (error) => {
+          this.logger.error('Erreur de connexion', error);
+          this.loading = false;
+          if (error.status === 404) {
+            this.error = 'Aucun compte trouvé. Veuillez vous inscrire d\'abord.';
+            this.toastService.error(this.error, 'Compte non trouvé');
+          } else if (error.status === 403) {
+            this.error = error.error?.message || 'Accès refusé.';
+            this.toastService.warning(this.error, 'Compte non actif', 5000);
+          } else {
+            this.error = error.error?.message || 'Erreur lors de la connexion.';
+            this.toastService.error(this.error, 'Erreur');
+          }
+        }
+      );
+    } else {
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
+      });
+    }
+  }
   private destroy$ = new Subject<void>();
   
   loginForm: FormGroup;
@@ -21,103 +68,79 @@ export class LoginComponent implements OnInit {
   error = '';
   info = '';
   returnUrl = '';
+  isGoogleInitialized = false;
   
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
+    private authService: AuthService,
+    private googleAuthService: GoogleAuthService,
     private logger: LoggerService,
     private toastService: ToastService
   ) {
+    // Initialize the login form
     this.loginForm = this.fb.group({
       mail: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
+  // ...existing code...
+    // ...existing code...
+
   ngOnInit(): void {
-    // Récupérer l'URL de retour
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-    
-    // Afficher les messages d'erreur si présents
-    const error = this.route.snapshot.queryParams['error'];
-    const pending = this.route.snapshot.queryParams['pending'];
-    
-    if (pending === 'true') {
-      this.info = 'Votre compte est en attente d\'approbation. Vous pourrez vous connecter une fois votre compte approuvé par l\'administrateur.';
-      // Nettoyer les paramètres d'URL
-      setTimeout(() => {
-        this.router.navigate(['/auth/login'], { replaceUrl: true });
-      }, 100);
-    } else if (error === 'session_expired') {
-      this.error = 'Votre session a expiré. Veuillez vous reconnecter.';
-      // Nettoyer les paramètres d'URL après affichage
-      setTimeout(() => {
-        this.router.navigate(['/auth/login'], { replaceUrl: true });
-      }, 100);
-    } else if (error === 'insufficient_role') {
-      this.error = 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page.';
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  onSubmit(): void {
-    if (this.loginForm.valid && !this.loading) {
-      this.loading = true;
-      this.error = '';
-      
-      const credentials: LoginRequest = this.loginForm.value;
-      
-      this.authService.login(credentials)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.logger.info('Login successful', { user: response.user.mail });
-            this.toastService.success(
-              `Bienvenue ${response.user.nom || ''} !`,
-              'Connexion réussie',
-              3000
+    // Render Google Sign-In button
+    const clientId = environment.google?.clientId;
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id && clientId) {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        auto_select: false,
+        prompt: 'select_account',
+        callback: (response: any) => {
+          // Use the credential directly from the response
+          const idToken = response.credential;
+          if (idToken) {
+            this.googleAuthService.handleCredentialResponse(response);
+            this.authService.googleSignIn(idToken).subscribe(
+              (result) => {
+                this.logger.info('Google login successful', { user: result.user?.mail });
+                this.toastService.success(
+                  `Bienvenue ${result.user?.nom || result.user?.prenom || ''} !`,
+                  'Connexion Google réussie',
+                  3000
+                );
+                const returnUrl = this.returnUrl || '/dashboard';
+                this.router.navigate([returnUrl]);
+              },
+              (error) => {
+                this.logger.error('Google login failed', error);
+                this.loading = false;
+                if (error.status === 404) {
+                  this.error = 'Aucun compte Google trouvé. Veuillez vous inscrire d\'abord.';
+                  this.toastService.error(this.error, 'Compte non trouvé');
+                } else if (error.status === 403) {
+                  this.error = error.error?.message || 'Accès refusé.';
+                  this.toastService.warning(this.error, 'Compte non actif', 5000);
+                } else {
+                  this.error = error.error?.message || 'Erreur lors de la connexion Google.';
+                  this.toastService.error(this.error, 'Erreur Google');
+                }
+              }
             );
-            // Le service AuthService gère déjà la redirection
-            this.loading = false;
-          },
-          error: (error) => {
-            this.logger.error('Login failed', error);
-            this.loading = false;
-            
-            if (error.status === 404) {
-              this.error = 'Aucun utilisateur trouvé avec cette adresse email.';
-              this.toastService.error(this.error, 'Erreur de connexion');
-            } else if (error.status === 401) {
-              this.error = 'Mot de passe incorrect.';
-              this.toastService.error(this.error, 'Erreur de connexion');
-            } else if (error.status === 403) {
-              // Account status issues (pending, rejected, suspended)
-              this.error = error.error?.message || 'Accès refusé.';
-              this.toastService.warning(this.error, 'Compte non actif', 5000);
-            } else if (error.status === 0) {
-              this.error = 'Impossible de se connecter au serveur. Vérifiez votre connexion.';
-              this.toastService.error(this.error, 'Erreur réseau');
-            } else {
-              this.error = error.error?.message || 'Une erreur est survenue lors de la connexion.';
-              this.toastService.error(this.error, 'Erreur de connexion');
-            }
+          } else {
+            this.error = 'Token Google manquant.';
+            this.toastService.error(this.error, 'Erreur Google');
           }
-        });
-    } else {
-      // Marquer tous les champs comme touched pour afficher les erreurs
-      Object.keys(this.loginForm.controls).forEach(key => {
-        this.loginForm.get(key)?.markAsTouched();
+        }
       });
+      google.accounts.id.renderButton(
+        document.getElementById('google-signin-button'),
+        { theme: 'outline', size: 'large', width: 320 }
+      );
+      this.isGoogleInitialized = true;
+    } else {
+      this.isGoogleInitialized = false;
     }
   }
-
-  // Getters pour l'accès facile aux contrôles du formulaire
-  get mail() { return this.loginForm.get('mail'); }
-  get password() { return this.loginForm.get('password'); }
 }

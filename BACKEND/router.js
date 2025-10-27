@@ -2,6 +2,7 @@ import {Router} from "express";
 import {GetAllEtudiants, GetEtudiantById, CreateEtudiant, UpdateEtudiant, DeleteEtudiant} from './controler/controler.js';
 import {GetAllMatieres, GetAllMatieresDetails, GetMatiereById, CreateMatiere, UpdateMatiere, DeleteMatiere} from './controler/controlerMatieres.js';
 import { authentification, role } from "./middelware/authentification.js";
+import upload from './middelware/upload.js'; 
 import Message from './modeles/message.js';
 
 const myRouter = Router();
@@ -35,17 +36,17 @@ myRouter.get('/', conditionalAuth, role('admin', 'user'), GetAllEtudiants);
 // Note: super-admin bypasses role check in middleware
 myRouter.get('/:id', authentification, role('admin', 'user'), GetEtudiantById);
 
-// Only admin can create students
+// Only admin can create students - with photo upload
 // Note: super-admin bypasses role check in middleware
-myRouter.post('/', authentification, role('admin'), CreateEtudiant);
+myRouter.post('/', upload.single('photo'), authentification, role('admin'), CreateEtudiant);
 
-// Only admin can update any student, users can update their own profile
+// Only admin can update any student, users can update their own profile - with photo upload
 // Note: super-admin bypasses role check in middleware
-myRouter.put('/:id', authentification, role('admin', 'user'), (req, res, next) => {
-	if (req.user.role === 'admin' || req.user.role === 'super-admin' || req.user.userId === req.params.id) {
-		return UpdateEtudiant(req, res, next);
-	}
-	return res.status(403).json({ message: 'Forbidden: Cannot edit other profiles' });
+myRouter.put('/:id', upload.single('photo'), authentification, role('admin', 'user'), (req, res, next) => {
+    if (req.user.role === 'admin' || req.user.role === 'super-admin' || req.user.userId === req.params.id) {
+        return UpdateEtudiant(req, res, next);
+    }
+    return res.status(403).json({ message: 'Forbidden: Cannot edit other profiles' });
 });
 
 // Only admin can delete students

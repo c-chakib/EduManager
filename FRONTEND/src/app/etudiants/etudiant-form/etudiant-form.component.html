@@ -10,28 +10,21 @@
     </app-button>
     <div class="title-section">
       <h1 id="form-title">{{ isEditMode ? 'Modifier l\'étudiant' : 'Ajouter un nouvel étudiant' }}</h1>
-      <app-badge 
-        [variant]="isEditMode ? 'warning' : 'success'"
-        size="lg">
+      <span class="mode-badge" [class]="isEditMode ? 'edit-mode' : 'create-mode'">
         {{ isEditMode ? 'Modification' : 'Création' }}
-      </app-badge>
+      </span>
     </div>
   </div>
 
   <!-- Global error -->
-  <app-alert 
-    *ngIf="error"
-    variant="error"
-    title="Erreur"
-    [closable]="false">
-    {{ error }}
-  </app-alert>
+  <div *ngIf="error" class="alert">
+    <span class="icon">!</span>
+    <span>{{ error }}</span>
+  </div>
 
   <!-- Form -->
-  <app-card 
-    variant="elevated"
-    padding="lg">
-    <form #studentForm="ngForm" (ngSubmit)="onSubmit(studentForm)" class="student-form" novalidate>
+  <div class="student-form">
+    <form #studentForm="ngForm" (ngSubmit)="onSubmit(studentForm)" novalidate>
     
     <!-- Section: Informations de base -->
     <div class="form-section">
@@ -81,26 +74,50 @@
           [attr.aria-invalid]="mail.invalid && (mail.touched || studentForm.submitted)"
         />
         <small class="error" *ngIf="mail.errors?.['required'] && (mail.touched || studentForm.submitted)">
-          L’email est obligatoire.
+          L'email est obligatoire.
         </small>
         <small class="error" *ngIf="mail.errors?.['email'] && (mail.touched || studentForm.submitted)">
-          Format d’email invalide.
+          Format d'email invalide.
         </small>
       </div>
 
-      <!-- Photo URL + Preview -->
+      <!-- Photo Upload + Preview -->
       <div class="form-group full-width">
-        <label for="photo">Photo (URL)</label>
+        <label for="photo">Photo de l'étudiant</label>
         <div class="photo-row">
-          <input
-            id="photo" name="photo" class="form-control" type="url"
-            placeholder="https://exemple.com/photo.jpg"
-            [(ngModel)]="etudiant.photo" #photo="ngModel"
-            (blur)="onPhotoBlur()" [class.invalid]="photoInvalid"
-            [attr.aria-invalid]="photoInvalid"
-          />
-          <div class="avatar-preview" *ngIf="previewUrl; else initials">
-            <img [src]="previewUrl" alt="Aperçu de la photo" (error)="onPreviewError()" />
+          <div class="file-upload-container">
+            <input
+              type="file"
+              id="photo"
+              name="photo"
+              class="file-input"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              #fileInput
+            />
+            <button type="button" class="file-upload-btn" (click)="fileInput.click()">
+              <i class="pi pi-upload"></i>
+              {{ isEditMode ? 'Changer la photo' : 'Choisir une photo' }}
+            </button>
+            <span class="file-name" *ngIf="selectedFile">
+              Nouvelle photo: {{ selectedFile.name }}
+            </span>
+            <span class="file-name" *ngIf="!selectedFile && etudiant.photo">
+              Photo actuelle conservée
+            </span>
+            <span class="file-name" *ngIf="!selectedFile && !etudiant.photo">
+              Aucune photo sélectionnée
+            </span>
+            <small class="hint" *ngIf="isEditMode">
+              Laissez vide pour conserver la photo actuelle
+            </small>
+          </div>
+          <div class="avatar-preview" *ngIf="selectedFile || etudiant.photo; else initials">
+            <img 
+              [src]="'http://localhost:3000/uploads/etudiants/' + etudiant.photo"
+              alt="Aperçu de la photo" 
+              (error)="onPreviewError()"
+            />
           </div>
           <ng-template #initials>
             <div class="avatar-preview initials">
@@ -108,85 +125,130 @@
             </div>
           </ng-template>
         </div>
-        <small class="error" *ngIf="photoInvalid">URL d’image invalide (http(s) requis).</small>
       </div>
 
       <!-- Matières -->
       <div class="form-group full-width">
-        <label>Matières</label>
+        <label for="matieres-select">Matières <span class="required">*</span></label>
 
-        <!-- Sélectionnées -->
-        <div class="selected-matieres" *ngIf="etudiant.matieres?.length; else noMats">
-          <span class="chip" *ngFor="let m of etudiant.matieres; let i = index">
-            {{ m }}
-            <!-- 🔧 FIXED: use [attr.aria-label] here -->
-            <button
-              type="button"
-              class="chip__remove"
-              (click)="removeMatiere(i)"
-              [attr.aria-label]="'Retirer ' + m"
-            >
-              ×
-            </button>
-          </span>
-        </div>
-        <ng-template #noMats>
-          <p class="hint">Aucune matière sélectionnée.</p>
-        </ng-template>
-
-        <!-- Sélection des matières avec dropdown -->
-        <div class="matieres-selection">
-          <!-- Dropdown pour sélectionner les matières -->
-          <div class="dropdown-container">
-            <button
-              type="button"
-              class="dropdown-trigger"
-              (click)="toggleDropdown()"
-              [class.active]="isDropdownOpen"
-            >
-              <span class="dropdown-text">
-                <i class="dropdown-icon">📚</i>
-                Sélectionner des matières
-              </span>
-              <span class="dropdown-arrow" [class.rotated]="isDropdownOpen">▼</span>
-            </button>
-
-            <div class="dropdown-menu" *ngIf="isDropdownOpen">
-              <div class="dropdown-header">
-                <span>Choisissez vos matières</span>
-                <button type="button" class="close-dropdown" (click)="closeDropdown()">✕</button>
+        <!-- Improved Matières Selection -->
+        <div class="matieres-selector">
+          <!-- Multi-select dropdown -->
+          <div class="multi-select-container">
+            <div class="multi-select-trigger" (click)="toggleDropdown()" [class.open]="isDropdownOpen">
+              <div class="selected-preview">
+                <ng-container *ngIf="etudiant.matieres && etudiant.matieres.length > 0; else placeholder">
+                  <span class="selected-count">{{ etudiant.matieres.length }} matière{{ etudiant.matieres.length > 1 ? 's' : '' }} sélectionnée{{ etudiant.matieres.length > 1 ? 's' : '' }}</span>
+                  <div class="selected-items">
+                    <span class="selected-item" *ngFor="let matiere of etudiant.matieres.slice(0, 2)">
+                      {{ matiere }}
+                    </span>
+                    <span class="more-items" *ngIf="etudiant.matieres.length > 2">
+                      +{{ etudiant.matieres.length - 2 }} autres
+                    </span>
+                  </div>
+                </ng-container>
+                <ng-template #placeholder>
+                  <span class="placeholder-text">Sélectionner des matières...</span>
+                </ng-template>
               </div>
-              <div class="dropdown-options">
-                <div
-                  class="dropdown-option"
-                  *ngFor="let matiere of allMatieres"
-                  [class.selected]="isMatiereSelected(matiere)"
-                  (click)="toggleMatiere(matiere)"
+              <div class="dropdown-arrow" [class.rotated]="isDropdownOpen">
+                <i class="pi pi-chevron-down"></i>
+              </div>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div class="multi-select-dropdown" *ngIf="isDropdownOpen">
+              <!-- Search input -->
+              <div class="search-container">
+                <i class="pi pi-search search-icon"></i>
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="Rechercher une matière..."
+                  [(ngModel)]="matiereSearchTerm"
+                  (input)="filterMatieres()"
+                  #searchInput
+                />
+                <button
+                  type="button"
+                  class="clear-search"
+                  *ngIf="matiereSearchTerm"
+                  (click)="clearSearch()"
+                  aria-label="Effacer la recherche"
                 >
-                  <span class="option-checkbox">
-                    <i *ngIf="isMatiereSelected(matiere)" class="check-icon">✓</i>
-                  </span>
-                  <span class="option-text">{{ matiere }}</span>
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+
+              <!-- Select All / Clear All -->
+              <div class="dropdown-actions">
+                <button
+                  type="button"
+                  class="action-btn select-all"
+                  (click)="selectAllMatieres()"
+                  [disabled]="filteredMatieres.length === 0"
+                >
+                  <i class="pi pi-check-square"></i>
+                  Tout sélectionner
+                </button>
+                <button
+                  type="button"
+                  class="action-btn clear-all"
+                  (click)="clearAllMatieres()"
+                  [disabled]="!etudiant.matieres || etudiant.matieres.length === 0"
+                >
+                  <i class="pi pi-times"></i>
+                  Tout désélectionner
+                </button>
+              </div>
+
+              <!-- Options list -->
+              <div class="options-container">
+                <div class="option-group" *ngIf="filteredMatieres.length > 0; else noResults">
+                  <div
+                    class="option-item"
+                    *ngFor="let matiere of filteredMatieres"
+                    [class.selected]="isMatiereSelected(matiere)"
+                    (click)="toggleMatiere(matiere)"
+                  >
+                    <div class="option-checkbox">
+                      <i class="pi pi-check" *ngIf="isMatiereSelected(matiere)"></i>
+                    </div>
+                    <span class="option-label">{{ matiere }}</span>
+                  </div>
                 </div>
+                <ng-template #noResults>
+                  <div class="no-results">
+                    <i class="pi pi-search"></i>
+                    <p>Aucune matière trouvée</p>
+                    <small *ngIf="matiereSearchTerm">Essayez un autre terme de recherche</small>
+                  </div>
+                </ng-template>
               </div>
             </div>
           </div>
 
-          <!-- Affichage des matières sélectionnées -->
-          <div class="selected-matieres" *ngIf="etudiant.matieres?.length; else noSelection">
-            <span class="selection-count">
-              {{ etudiant.matieres?.length || 0 }} matière(s) sélectionnée(s) :
-            </span>
-            <div class="selected-tags">
-              <span class="selected-tag" *ngFor="let matiere of etudiant.matieres; let i = index">
-                {{ matiere }}
-                <button type="button" class="remove-tag" (click)="removeMatiere(i)">✕</button>
-              </span>
+          <!-- Selected items display -->
+          <div class="selected-matieres-display" *ngIf="etudiant.matieres && etudiant.matieres.length > 0">
+            <div class="selected-header">
+              <span class="selected-title">Matières sélectionnées :</span>
+              <span class="selected-count-badge">{{ etudiant.matieres.length }}</span>
+            </div>
+            <div class="selected-chips">
+              <div class="chip" *ngFor="let matiere of etudiant.matieres; let i = index">
+                <span class="chip-text">{{ matiere }}</span>
+                <button
+                  type="button"
+                  class="chip-remove"
+                  (click)="removeMatiere(i)"
+                  [attr.aria-label]="'Retirer ' + matiere"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
             </div>
           </div>
-          <ng-template #noSelection>
-            <p class="no-selection">Aucune matière sélectionnée</p>
-          </ng-template>
         </div>
       </div>
       </div>
@@ -409,20 +471,20 @@
     </div>
 
     <!-- Actions -->
-    <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-      <app-button 
-        variant="ghost"
-        (clicked)="goBack()">
+    <div class="form-actions">
+      <button type="button" class="btn btn--ghost" (click)="goBack()">
         Annuler
-      </app-button>
-      <app-button 
+      </button>
+      <button 
         type="submit"
-        variant="primary"
-        [loading]="loading"
-        icon="pi pi-check">
+        class="btn btn--primary"
+        [disabled]="loading"
+      >
+        <span class="spinner" *ngIf="loading"></span>
+        <i class="pi pi-check" *ngIf="!loading"></i>
         {{ isEditMode ? 'Modifier l\'étudiant' : 'Créer l\'étudiant' }}
-      </app-button>
+      </button>
     </div>
     </form>
-  </app-card>
+  </div>
 </div>

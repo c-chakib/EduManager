@@ -28,8 +28,7 @@ const etudiantSchema = new mongoose.Schema({
     nom: {type: String, required: true, trim: true},
     prenom: {type: String, required: true, trim: true},
     mail: {type: String, required: true, unique: true, lowercase: true, trim: true},
-    photo: {type: String, default: "Picture unavailable"},
-    
+    photo: { type: String, default: '' },
     // Informations personnelles
     dateNaissance: {type: Date},
     lieuNaissance: {type: String, trim: true},

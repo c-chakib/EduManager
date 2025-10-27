@@ -494,7 +494,7 @@
     background: var(--navbar-bg-white);
     flex-direction: column;
     padding: 1.5rem;
-    gap: 1rem;
+    gap: 1.25rem;
     transform: translateY(-100%);
     opacity: 0;
     visibility: hidden;
@@ -503,6 +503,9 @@
     border-radius: 0 0 16px 16px;
     z-index: 9999;
     border: none;
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .nav-menu.active {
@@ -520,7 +523,7 @@
 
   .nav-actions {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1.25rem;
     width: 100%;
     margin-top: 1rem;
     padding-top: 1rem;
@@ -538,6 +541,9 @@
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
     border-radius: 0 0 16px 16px;
     z-index: 9998;
+    max-height: 30vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .nav-actions.active {
@@ -549,7 +555,18 @@
   .btn {
     justify-content: center;
     width: 100%;
-    padding: 1rem;
+    padding: 1.25rem;
+    font-size: 1.1rem;
+    min-height: 48px;
+    margin-bottom: 0.5rem;
+    border-radius: 16px;
+  }
+  .nav-link {
+    min-height: 48px;
+    font-size: 1.1rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 16px;
   }
 
   .logo-text {

@@ -9,6 +9,7 @@ import { SocketService } from '../../services/socket.service';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { StudentsResolverData } from '../../resolvers/students.resolver';
+import { environment } from '../../../environments/environment';
 
 type SortKey = 'nom_asc' | 'nom_desc' | 'prenom_asc' | 'prenom_desc' | 'id_asc' | 'id_desc' | 'date_desc' | 'date_asc';
 
@@ -17,7 +18,7 @@ type SortKey = 'nom_asc' | 'nom_desc' | 'prenom_asc' | 'prenom_desc' | 'id_asc' 
   standalone: false,
   templateUrl: './liste-etudiants.component.html',
   styleUrls: ['./liste-etudiants.component.css'],
-  changeDetection: ChangeDetectionStrategy.Default // Keep Default for now due to getters; can optimize further if needed
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class ListeEtudiantsComponent implements OnInit {
   private destroy$ = new Subject<void>();
@@ -143,6 +144,31 @@ export class ListeEtudiantsComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
+  // Helper method to get proper photo URL
+  getPhotoUrl(photo: string | null | undefined, etudiant: Etudiants): string {
+    if (!photo) {
+      return `https://ui-avatars.com/api/?name=${etudiant.prenom || 'Student'}+${etudiant.nom || ''}&size=200&background=3b82f6&color=fff`;
+    }
+    
+    // If it's already a full URL, return it
+    if (photo.startsWith('http')) {
+      return photo;
+    }
+    
+    // If it already starts with /uploads/, construct the full URL
+    if (photo.startsWith('/uploads/')) {
+      return `${environment.apiUrl}${photo}`;
+    }
+    
+    // If it's just a filename, construct the full URL using the API URL
+    return `${environment.apiUrl}/uploads/etudiants/${photo}`;
+  }
+
+  // Handle image loading errors
+  handleImageError(event: any, etudiant: Etudiants): void {
+    event.target.style.display = 'none';
+  }
+
   // Close matières dropdown on outside click
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -217,7 +243,8 @@ export class ListeEtudiantsComponent implements OnInit {
     // Initial load - use resolved data if available
     const resolvedData = this.route.snapshot.data['studentsData'] as StudentsResolverData;
     if (resolvedData && resolvedData.data && !resolvedData.error) {
-      this.EtudiantsListe = resolvedData.data.students || [];
+      // FIX: Create copies of student data to avoid reference issues
+      this.EtudiantsListe = this.normalizeStudentData(resolvedData.data.students || []);
       this.totalCount = resolvedData.data.total || 0;
       this.loading = false;
       this.logger.debug('Using resolved student data', { count: this.EtudiantsListe.length, total: this.totalCount });
@@ -281,19 +308,9 @@ export class ListeEtudiantsComponent implements OnInit {
             httpDuration: endTime - startTime
           });
 
-          // ...existing code...
-          if (resp.data.length > 0) {
-            this.logger.debug('First 3 students received', {
-              students: resp.data.slice(0, 3).map(s => ({
-                id: s.id,
-                nom: s.nom,
-                isDemo: (s as any).isDemo
-              }))
-            });
-          }
-
-          // Backend now handles demo filtering, no need to filter here in authenticated mode
+          // FIX: Use normalized data with proper photo URLs
           this.EtudiantsListe = this.normalizeStudentData(resp.data);
+          
           // Fallback numeric sort on ID for UI reliability in UI
           if (this.sortBy.startsWith('id_')) {
             const dir = this.sortBy.endsWith('_desc') ? -1 : 1;
@@ -304,6 +321,7 @@ export class ListeEtudiantsComponent implements OnInit {
               return aId < bId ? -1 * dir : 1 * dir;
             });
           }
+          
           try {
             const ids = this.EtudiantsListe.slice(0, 5).map(s => s.id);
             this.logger.debug('First IDs after apply', { sortBy: this.sortBy, ids });
@@ -366,15 +384,89 @@ export class ListeEtudiantsComponent implements OnInit {
   // Helper methods for better code organization
   private normalizeStudentData(students: Etudiants[]): Etudiants[] {
     return students.map(s => ({
-      ...s,
-      matieres: Array.isArray(s.matieres)
-        ? s.matieres
-        : typeof (s as any).matieres === 'string'
-          ? (s as any).matieres.split(',').map((x: string) => x.trim()).filter(Boolean)
-          : Array.isArray((s as any)['matières'])
-            ? (s as any)['matières']
-            : []
+      ...s, // FIX: Create new object to avoid reference issues
+      matieres: this.getMatieresArray(s.matieres) // FIX: Use the fixed matieres parser
     }));
+  }
+
+  // Fixed matieres parser for list component
+  private getMatieresArray(matieres: any): string[] {
+    if (!matieres) return [];
+    
+    // If it's already a proper array, return it
+    if (Array.isArray(matieres)) {
+      return matieres.filter(m => m && typeof m === 'string');
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof matieres === 'string') {
+      try {
+        // Clean the string - remove excessive escaping
+        let cleanedString = matieres;
+        
+        // Remove multiple levels of escaping
+        while (cleanedString.startsWith('"') || cleanedString.startsWith('[') || cleanedString.includes('\\"')) {
+          try {
+            const parsed = JSON.parse(cleanedString);
+            if (typeof parsed === 'string') {
+              cleanedString = parsed;
+            } else if (Array.isArray(parsed)) {
+              return this.flattenMatieres(parsed);
+            } else {
+              break;
+            }
+          } catch {
+            cleanedString = cleanedString.replace(/^"+|"+$/g, '')
+                                         .replace(/\\"/g, '"')
+                                         .replace(/^\[|\]$/g, '');
+            break;
+          }
+        }
+        
+        // Final cleanup and split
+        const finalClean = cleanedString.replace(/^"+|"+$/g, '')
+                                       .replace(/\\"/g, '"')
+                                       .replace(/^\[|\]$/g, '');
+        
+        // Split by comma and clean each item
+        const items = finalClean.split(',')
+          .map(item => item.trim()
+            .replace(/^"+|"+$/g, '')
+            .replace(/^'|'$/g, '')
+          )
+          .filter(item => item.length > 0);
+        
+        return items;
+      } catch (error) {
+        console.error('Error parsing matieres:', error);
+        return [];
+      }
+    }
+    
+    return [];
+  }
+
+  // Helper to flatten nested matieres arrays
+  private flattenMatieres(arr: any[]): string[] {
+    const result: string[] = [];
+    
+    const flatten = (array: any[]) => {
+      array.forEach(item => {
+        if (Array.isArray(item)) {
+          flatten(item);
+        } else if (typeof item === 'string' && item.trim().length > 0) {
+          const cleaned = item.trim()
+            .replace(/^"+|"+$/g, '')
+            .replace(/^'|'$/g, '');
+          if (cleaned && !result.includes(cleaned)) {
+            result.push(cleaned);
+          }
+        }
+      });
+    };
+    
+    flatten(arr);
+    return result;
   }
 
   private extractUniqueMatieres(students: Etudiants[]): string[] {

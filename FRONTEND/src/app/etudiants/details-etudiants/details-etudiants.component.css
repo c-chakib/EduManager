@@ -21,17 +21,30 @@
   min-height: calc(100vh - 80px);
 }
 
-/* Header Section */
+/* Header Section - IMPROVED: Better button visibility */
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  width: 100%;
+  gap: 1rem;
 }
 
 .header-actions {
   display: flex;
   gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Ensure buttons are visible */
+.header-actions app-button,
+.header-section app-button {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Profile Layout */
@@ -59,6 +72,7 @@
 .avatar-section {
   text-align: center;
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .student-avatar {
@@ -69,6 +83,16 @@
   border: 4px solid var(--accent);
   margin-bottom: 1rem;
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+}
+
+/* Add photo button area */
+.avatar-upload {
+  margin-top: 1rem;
+}
+
+.avatar-upload app-button {
+  display: inline-flex !important;
+  width: auto !important;
 }
 
 .student-name {
@@ -197,6 +221,8 @@
   color: var(--text);
   background: var(--card);
   transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .edit-input:focus {
@@ -221,6 +247,7 @@ textarea.edit-input {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  margin-top: 0.5rem;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -241,6 +268,19 @@ textarea.edit-input {
   font-style: italic;
 }
 
+/* Button fixes for better visibility */
+app-button {
+  display: inline-flex !important;
+  min-width: auto !important;
+}
+
+/* Ensure all buttons are properly displayed */
+.header-actions app-button,
+.avatar-upload app-button {
+  z-index: 10;
+  position: relative;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .profile-layout {
@@ -256,6 +296,7 @@ textarea.edit-input {
 @media (max-width: 768px) {
   .student-details-container {
     padding: 1rem;
+    margin-top: 70px;
   }
 
   .info-grid {
@@ -270,6 +311,12 @@ textarea.edit-input {
 
   .header-actions {
     justify-content: center;
+    width: 100%;
+  }
+
+  .header-actions app-button {
+    flex: 1;
+    min-width: 120px;
   }
 
   .student-avatar {
@@ -278,12 +325,23 @@ textarea.edit-input {
   }
 }
 
+@media (max-width: 480px) {
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-actions app-button {
+    width: 100%;
+  }
+}
+
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0f172a;
     --card: #1e293b;
-    --text: #f1f5f9;
+    --text: #f8fafc;
     --muted: #94a3b8;
     --border: #334155;
   }
@@ -291,4 +349,11 @@ textarea.edit-input {
   .stat-item:hover {
     background: #334155;
   }
+}
+
+/* Force button visibility - important rules */
+app-button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline-flex !important;
 }

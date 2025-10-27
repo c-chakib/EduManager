@@ -37,6 +37,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Add COOP and COEP headers for Google Identity Services
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  next();
+});
+
 // Security middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -57,6 +64,7 @@ app.use(limiter);
 aiService.initializeAI();
 
 app.use (express.json());
+app.use('/uploads', express.static('uploads'));
 app.use(morgan('combined'));
 app.use('/etudiants', myRouter);
 app.use('/users', routerUser);

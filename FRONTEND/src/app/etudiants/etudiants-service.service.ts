@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { catchError, Observable, tap, of, Subject } from 'rxjs';
+import { catchError, Observable, tap, of, Subject, map } from 'rxjs';
 import { Etudiants } from './etudiants';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -19,6 +19,23 @@ export class EtudiantsServiceService {
     private http: HttpClient,
     private logger: LoggerService
   ) {}
+
+  // ADD THIS METHOD TO FIX THE ERROR
+  notifyStudentsChanged(): void {
+    this.studentsChanged.next();
+  }
+
+  uploadStudentPhoto(id: number, formData: FormData): Observable<string> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.put<{ photo: string }>(url, formData).pipe(
+      tap((resp) => this.logger.info('Photo uploaded', resp)),
+      map(resp => resp.photo),
+      catchError(error => {
+        this.logger.error('Error uploading photo', error);
+        throw error;
+      })
+    );
+  }
 
   getStudentList(
     page = 1, 
@@ -73,8 +90,8 @@ export class EtudiantsServiceService {
     );
   }
 
-  updateStudent(id: number, etudiant: Etudiants): Observable<Etudiants> {
-    return this.http.put<Etudiants>(`${this.apiUrl}/${id}`, etudiant).pipe(
+  updateStudent(id: number, data: any): Observable<Etudiants> {
+    return this.http.put<Etudiants>(`${this.apiUrl}/${id}`, data).pipe(
       tap((resp) => {
         this.logger.info('Updated student', { id, student: resp });
         this.studentsChanged.next(); // Notify listeners that students list changed
@@ -99,8 +116,8 @@ export class EtudiantsServiceService {
     );
   }
 
-  createStudent(etudiant: Etudiants): Observable<Etudiants> {
-    return this.http.post<Etudiants>(this.apiUrl, etudiant).pipe(
+  createStudent(data: any): Observable<Etudiants> {
+    return this.http.post<Etudiants>(this.apiUrl, data).pipe(
       tap((resp) => {
         this.logger.info('Created student', resp);
         this.studentsChanged.next(); // Notify listeners that students list changed

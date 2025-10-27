@@ -69,6 +69,7 @@ export async function registerUser(req, res, next) {
     next(error);
   }
 }
+
 export async function loginUser(req, res, next) {
   const { mail, password } = req.body;
   try {
@@ -104,26 +105,27 @@ export async function loginUser(req, res, next) {
     next(error);
   }
 }
+
 export async function updateUserProfile(req, res, next) {
   try {
     const userId = req.user.userId; // From authentication middleware
-  const { 
-    nom, 
-    prenom, 
-    mail, 
-    cin, 
-    telephone, 
-    telephoneMobile, 
-    adresse, 
-    ville, 
-    codePostal, 
-    pays = 'Maroc',
-    // Additional profile fields
-    bio,
-    dateNaissance,
-    genre,
-    preferences
-  } = req.body;
+    const { 
+      nom, 
+      prenom, 
+      mail, 
+      cin, 
+      telephone, 
+      telephoneMobile, 
+      adresse, 
+      ville, 
+      codePostal, 
+      pays = 'Maroc',
+      // Additional profile fields
+      bio,
+      dateNaissance,
+      genre,
+      preferences
+    } = req.body;
 
     // Get current user to check if email is actually changing
     const currentUser = await User.findById(userId);
@@ -479,33 +481,33 @@ export async function approveUser(req, res, next) {
       });
     }
     
-  user.accountStatus = 'approved';
+    user.accountStatus = 'approved';
     user.approvedBy = approverId;
     user.approvalDate = new Date();
-  // Audit log
-  user.auditLog = user.auditLog || [];
-  user.auditLog.push({ action: 'approve', by: approverId, reason: 'Admin approval' });
-  await user.save();
+    // Audit log
+    user.auditLog = user.auditLog || [];
+    user.auditLog.push({ action: 'approve', by: approverId, reason: 'Admin approval' });
+    await user.save();
 
-  // Emit Socket.io event for real-time updates
-  io.emit('userApproved', {
-    user: {
-      id: user._id,
-      nom: user.nom,
-      prenom: user.prenom,
-      mail: user.mail,
-      role: user.role,
-      accountStatus: user.accountStatus
-    },
-    approvedBy: {
-      id: req.user?.userId,
-      nom: req.user?.nom,
-      prenom: req.user?.prenom,
-      role: req.user?.role
-    },
-    timestamp: new Date()
-  });
-  console.log('[Socket.io] Emitted userApproved event for user:', user._id);
+    // Emit Socket.io event for real-time updates
+    io.emit('userApproved', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role,
+        accountStatus: user.accountStatus
+      },
+      approvedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userApproved event for user:', user._id);
     
     res.status(200).json({
       success: true,
@@ -774,14 +776,58 @@ export async function googleSignIn(req, res, next) {
       email: payload.email
     };
 
-    // Find user by Google ID or email
+    // Find user by Google ID first
     let user = await User.findOne({ googleId: googleUser.id });
+    
     if (!user) {
-      user = await User.findOne({ mail: googleUser.email, isGoogleUser: true });
-    }
-
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur Google non trouvé' });
+      // If not found by Google ID, try to find by email
+      user = await User.findOne({ mail: googleUser.email });
+      
+      if (user) {
+        // User exists with this email - check if it's approved
+        if (user.accountStatus === 'approved' || user.accountStatus === 'active') {
+          // Link the approved user with Google
+          user.googleId = googleUser.id;
+          user.isGoogleUser = true;
+          user.profilePicture = payload.picture || user.profilePicture;
+          await user.save();
+          console.log('Linked existing approved user with Google account:', user.mail);
+        } else {
+          // User exists but is not approved - don't allow Google login
+          return res.status(403).json({
+            message: `Votre compte avec cette adresse email n'est pas approuvé. ${user.rejectionReason || 'Contactez un administrateur.'}`
+          });
+        }
+      } else {
+        // Create new user with Google profile info
+        const nom = payload.family_name || payload.name || 'Google';
+        const prenom = payload.given_name || payload.name || 'User';
+        const newUser = new User({
+          nom,
+          prenom,
+          mail: googleUser.email,
+          password: '', // No password for Google users
+          role: 'user',
+          accountStatus: 'pending', // Or 'active' if you want instant access
+          googleId: googleUser.id,
+          profilePicture: payload.picture,
+          isGoogleUser: true
+        });
+        await newUser.save();
+        user = newUser;
+        // Optionally emit Socket.io event for new user
+        io.emit('userCreated', {
+          user: {
+            id: user._id,
+            nom: user.nom,
+            prenom: user.prenom,
+            mail: user.mail,
+            role: user.role,
+            accountStatus: user.accountStatus
+          },
+          timestamp: new Date()
+        });
+      }
     }
 
     // Check account status
@@ -798,31 +844,7 @@ export async function googleSignIn(req, res, next) {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role,
-        mail: user.mail
-      },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Emit Socket.io event
-    io.emit('userLoggedIn', {
-      user: {
-        id: user._id,
-        nom: user.nom,
-        prenom: user.prenom,
-        mail: user.mail,
-        role: user.role
-      },
-      timestamp: new Date()
-    });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
       message: 'Connexion Google réussie',
@@ -837,7 +859,6 @@ export async function googleSignIn(req, res, next) {
         profilePicture: user.profilePicture
       }
     });
-
   } catch (error) {
     console.error('Google signin error:', error);
     next(error);

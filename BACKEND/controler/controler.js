@@ -1,5 +1,7 @@
 import Etudiant from "../modeles/etudiants.js";
 import { io } from "../index.js";
+import fs from 'fs';
+import path from 'path';
 
 export async function GetAllEtudiants(req, res, next) {
     try {
@@ -132,12 +134,23 @@ export async function CreateEtudiant(req, res, next) {
         // Get user ID from authentication middleware
         const userId = req.user?.userId;
         
+        // Parse matieres if it's a JSON string
+        let parsedBody = { ...req.body };
+        if (parsedBody.matieres && typeof parsedBody.matieres === 'string') {
+            try {
+                parsedBody.matieres = JSON.parse(parsedBody.matieres);
+            } catch (error) {
+                console.error('Error parsing matieres:', error);
+                parsedBody.matieres = [];
+            }
+        }
+        
         // Create new student with auto-generated ID and Moroccan fields
         const {
             nom, prenom, mail, cin, telephone, telephoneParent,
             adresse, ville, codePostal, pays = 'Maroc', nationalite = 'Marocaine',
             ...rest
-        } = req.body;
+        } = parsedBody;
         const studentData = {
             nom, prenom, mail, cin, telephone, telephoneParent,
             adresse, ville, codePostal, pays, nationalite,
@@ -145,8 +158,37 @@ export async function CreateEtudiant(req, res, next) {
             createdBy: userId, // Track who created this student
             ...rest
         };
+
+        // Handle photo upload
+        if (req.file) {
+            studentData.photo = `/uploads/etudiants/${req.file.filename}`;
+        }
+
         const newEtudiant = new Etudiant(studentData);
         const savedEtudiant = await newEtudiant.save();
+        
+        // Handle photo file renaming for new students
+        if (req.file && req.file.filename.startsWith('temp-')) {
+            const uploadsDir = './uploads/etudiants/';
+            const oldPath = path.join(uploadsDir, req.file.filename);
+            const ext = path.extname(req.file.filename);
+            const newFilename = `${savedEtudiant.id}-photo${ext}`;
+            const newPath = path.join(uploadsDir, newFilename);
+            
+            try {
+                // Rename the file
+                await fs.promises.rename(oldPath, newPath);
+                
+                // Update the photo field in the database
+                savedEtudiant.photo = `/uploads/etudiants/${newFilename}`;
+                await savedEtudiant.save();
+                
+                console.log(`Renamed photo file from ${req.file.filename} to ${newFilename}`);
+            } catch (renameError) {
+                console.error('Error renaming photo file:', renameError);
+                // Keep the temporary name if rename fails
+            }
+        }
         
         // Update user stats
         if (userId) {
@@ -181,11 +223,27 @@ export async function UpdateEtudiant(req, res, next) {
         // Get user ID from authentication middleware
         const userId = req.user?.userId;
         
+        // Parse matieres if it's a JSON string
+        let parsedBody = { ...req.body };
+        if (parsedBody.matieres && typeof parsedBody.matieres === 'string') {
+            try {
+                parsedBody.matieres = JSON.parse(parsedBody.matieres);
+            } catch (error) {
+                console.error('Error parsing matieres:', error);
+                parsedBody.matieres = [];
+            }
+        }
+        
         // Add updatedBy to the update data
         const updateData = {
-            ...req.body,
+            ...parsedBody,
             updatedBy: userId
         };
+
+        // Handle photo upload
+        if (req.file) {
+            updateData.photo = `/uploads/etudiants/${req.file.filename}`;
+        }
         
         const etudiant = await Etudiant.findOneAndUpdate(
             {id:req.params.id}, 
