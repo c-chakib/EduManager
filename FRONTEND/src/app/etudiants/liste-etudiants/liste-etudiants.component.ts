@@ -1,13 +1,14 @@
 import { Component, OnInit, ChangeDetectionStrategy, ElementRef, HostListener } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs';
 import { Etudiants } from '../etudiants';
 import { EtudiantsServiceService } from '../etudiants-service.service';
 import { SocketService } from '../../services/socket.service';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { StudentsResolverData } from '../../resolvers/students.resolver';
 
 type SortKey = 'nom_asc' | 'nom_desc' | 'prenom_asc' | 'prenom_desc' | 'id_asc' | 'id_desc' | 'date_desc' | 'date_asc';
 
@@ -138,7 +139,8 @@ export class ListeEtudiantsComponent implements OnInit {
     public authService: AuthService,
     private toastService: ToastService,
     private elRef: ElementRef<HTMLElement>,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private route: ActivatedRoute
   ) {}
 
   // Close matières dropdown on outside click
@@ -212,8 +214,17 @@ export class ListeEtudiantsComponent implements OnInit {
       this.loadStudents(eventTime);
     });
 
-    // Initial load
-    this.loadStudents();
+    // Initial load - use resolved data if available
+    const resolvedData = this.route.snapshot.data['studentsData'] as StudentsResolverData;
+    if (resolvedData && resolvedData.data && !resolvedData.error) {
+      this.EtudiantsListe = resolvedData.data.students || [];
+      this.totalCount = resolvedData.data.total || 0;
+      this.loading = false;
+      this.logger.debug('Using resolved student data', { count: this.EtudiantsListe.length, total: this.totalCount });
+    } else {
+      // Fallback: load data if resolver didn't provide it
+      this.loadStudents();
+    }
   }
 
   ngOnDestroy() {

@@ -17,5 +17,8 @@ export const environment = {
   logging: {
     enabled: true,
     level: 'debug' // debug, info, warn, error
+  },
+  google: {
+    clientId: '539779239335-grgcj03kdoodn70muil65pb2jtgetc15.apps.googleusercontent.com' // Replace with your actual Google Client ID
   }
 };

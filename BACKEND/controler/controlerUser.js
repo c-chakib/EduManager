@@ -1,4 +1,6 @@
 import User from "../modeles/user.js";
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { io } from "../index.js"; 
@@ -592,6 +594,28 @@ export async function suspendUser(req, res, next) {
     user.auditLog = user.auditLog || [];
     user.auditLog.push({ action: 'suspend', by: req.user.userId, reason });
     await user.save();
+
+    // Emit Socket.io event for real-time updates
+    io.emit('userSuspended', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role,
+        accountStatus: user.accountStatus
+      },
+      suspendedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      reason: reason || 'Non spécifié',
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userSuspended event for user:', user._id);
+
     res.status(200).json({ success: true, message: 'Utilisateur suspendu', data: user });
   } catch (error) {
     next(error);
@@ -610,8 +634,212 @@ export async function reactivateUser(req, res, next) {
     user.auditLog = user.auditLog || [];
     user.auditLog.push({ action: 'reactivate', by: req.user.userId });
     await user.save();
+
+    // Emit Socket.io event for real-time updates
+    io.emit('userReactivated', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role,
+        accountStatus: user.accountStatus
+      },
+      reactivatedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      timestamp: new Date()
+    });
+    console.log('[Socket.io] Emitted userReactivated event for user:', user._id);
+
     res.status(200).json({ success: true, message: 'Utilisateur réactivé', data: user });
   } catch (error) {
+    next(error);
+  }
+}
+
+// Google Authentication Functions
+export async function googleSignUp(req, res, next) {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: 'Token Google manquant' });
+    }
+
+    // Verify Google idToken and extract user info
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (err) {
+      return res.status(401).json({ message: 'Token Google invalide' });
+    }
+    const payload = ticket.getPayload();
+    const googleUser = {
+      id: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      given_name: payload.given_name,
+      family_name: payload.family_name,
+      picture: payload.picture,
+      verified_email: payload.email_verified
+    };
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ mail: googleUser.email });
+    if (existingUser) {
+      return res.status(409).json({
+        message: 'Un compte avec cette adresse email existe déjà.'
+      });
+    }
+
+    // Create new user with Google data
+    // Ensure nom and prenom are set, fallback to name if missing
+    const nom = googleUser.family_name || googleUser.name || 'Google';
+    const prenom = googleUser.given_name || googleUser.name || 'User';
+    const newUser = new User({
+      nom,
+      prenom,
+      mail: googleUser.email,
+      password: '', // No password for Google users
+      role: 'user',
+      accountStatus: 'pending', // Still requires approval
+      googleId: googleUser.id,
+      profilePicture: googleUser.picture,
+      isGoogleUser: true
+    });
+
+    await newUser.save();
+
+    // Emit Socket.io event
+    io.emit('userCreated', {
+      user: {
+        id: newUser._id,
+        nom: newUser.nom,
+        prenom: newUser.prenom,
+        mail: newUser.mail,
+        role: newUser.role,
+        accountStatus: newUser.accountStatus,
+        isGoogleUser: true
+      },
+      timestamp: new Date()
+    });
+
+    res.status(201).json({
+      message: 'Compte Google créé avec succès. En attente d\'approbation.',
+      pendingApproval: true,
+      user: {
+        id: newUser._id,
+        nom: newUser.nom,
+        prenom: newUser.prenom,
+        mail: newUser.mail,
+        role: newUser.role,
+        accountStatus: newUser.accountStatus
+      }
+    });
+
+  } catch (error) {
+    console.error('Google signup error:', error);
+    next(error);
+  }
+}
+
+export async function googleSignIn(req, res, next) {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: 'Token Google manquant' });
+    }
+
+    // Verify Google idToken and extract user info
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (err) {
+      return res.status(401).json({ message: 'Token Google invalide' });
+    }
+    const payload = ticket.getPayload();
+    const googleUser = {
+      id: payload.sub,
+      email: payload.email
+    };
+
+    // Find user by Google ID or email
+    let user = await User.findOne({ googleId: googleUser.id });
+    if (!user) {
+      user = await User.findOne({ mail: googleUser.email, isGoogleUser: true });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur Google non trouvé' });
+    }
+
+    // Check account status
+    if (user.accountStatus === 'pending') {
+      return res.status(403).json({
+        message: 'Votre compte est en attente d\'approbation par un administrateur.'
+      });
+    }
+
+    if (user.accountStatus === 'suspended') {
+      return res.status(403).json({
+        message: 'Votre compte a été suspendu. Contactez un administrateur.'
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        role: user.role,
+        mail: user.mail
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Emit Socket.io event
+    io.emit('userLoggedIn', {
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role
+      },
+      timestamp: new Date()
+    });
+
+    res.status(200).json({
+      message: 'Connexion Google réussie',
+      token,
+      user: {
+        id: user._id,
+        nom: user.nom,
+        prenom: user.prenom,
+        mail: user.mail,
+        role: user.role,
+        accountStatus: user.accountStatus,
+        profilePicture: user.profilePicture
+      }
+    });
+
+  } catch (error) {
+    console.error('Google signin error:', error);
     next(error);
   }
 }

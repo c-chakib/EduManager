@@ -61,6 +61,46 @@ app.use(morgan('combined'));
 app.use('/etudiants', myRouter);
 app.use('/users', routerUser);
 app.use('/chatbot', routerChatbot);
+
+// Chat routes - admin only for clearing chat
+app.delete('/chat/clear', authentification, async (req, res) => {
+  try {
+    // Check if user is admin or super-admin
+    if (req.user?.role !== 'admin' && req.user?.role !== 'super-admin') {
+      return res.status(403).json({ success: false, message: 'Accès refusé. Permissions administrateur requises.' });
+    }
+
+    // Delete all messages from database
+    const result = await Message.deleteMany({});
+    
+    // Emit Socket.io event to notify all clients to clear their chat
+    io.emit('chatCleared', {
+      clearedBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      messageCount: result.deletedCount,
+      timestamp: new Date()
+    });
+    
+    console.log(`Chat cleared by ${req.user?.nom} ${req.user?.prenom} - ${result.deletedCount} messages deleted`);
+    
+    res.status(200).json({
+      success: true,
+      message: `Chat effacé avec succès. ${result.deletedCount} messages supprimés.`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error clearing chat:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'effacement du chat'
+    });
+  }
+});
+
 app.use(errorHandler);
 app.use(NotFound);
 

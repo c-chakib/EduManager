@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { LoggerService } from '../../core/services/logger.service';
+import { StudentDetailResolverData } from '../../resolvers/student-detail.resolver';
 
 @Component({
   selector: 'app-details-etudiants',
@@ -31,9 +32,36 @@ export class DetailsEtudiantsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.loadEtudiantDetails(+id);
+    // Get resolved data from route
+    const resolvedData = this.route.snapshot.data['studentData'] as StudentDetailResolverData;
+
+    if (resolvedData) {
+      if (resolvedData.error) {
+        // Handle specific errors
+        if (resolvedData.error === 'Student not found') {
+          // Navigate to students list for 404 errors
+          this.toastService.error('Étudiant non trouvé');
+          this.router.navigate(['/etudiants']);
+          return;
+        }
+        this.error = resolvedData.error;
+        this.loading = false;
+      } else if (resolvedData.data) {
+        this.etudiant = resolvedData.data;
+        this.loading = false;
+      } else {
+        // No data and no error - fallback to manual loading
+        const id = this.route.snapshot.params['id'];
+        if (id) {
+          this.loadEtudiantDetails(+id);
+        }
+      }
+    } else {
+      // No resolved data - fallback to manual loading
+      const id = this.route.snapshot.params['id'];
+      if (id) {
+        this.loadEtudiantDetails(+id);
+      }
     }
   }
 

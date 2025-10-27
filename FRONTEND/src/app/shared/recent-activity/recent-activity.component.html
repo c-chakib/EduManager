@@ -1,0 +1,47 @@
+<div class="recent-activity-container">
+  <div class="activity-header">
+    <div class="header-info">
+      <i class="pi pi-clock"></i>
+      <h3>Activités Récentes</h3>
+    </div>
+    <button
+      class="clear-btn"
+      (click)="clearAllActivities()"
+      *ngIf="activities.length > 0"
+      title="Effacer toutes les activités">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <div class="activity-list" *ngIf="activities.length > 0; else noActivities">
+    <div
+      class="activity-item"
+      *ngFor="let activity of activities; trackBy: trackByActivityId"
+      [ngClass]="activity.type">
+      <div class="activity-icon">
+        <i [class]="getActivityIcon(activity.type)"></i>
+      </div>
+      <div class="activity-content">
+        <div class="activity-header">
+          <span class="activity-type">{{ getActivityTypeLabel(activity.type) }}</span>
+          <span class="activity-time">{{ formatRelativeTime(activity.timestamp) }}</span>
+        </div>
+        <div class="activity-details">
+          <div class="activity-action">{{ activity.action }}</div>
+          <div class="activity-description">{{ activity.details }}</div>
+          <div class="activity-performer">
+            <span class="performer-label">Par:</span>
+            <span class="performer-name">{{ activity.performedByName }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noActivities>
+    <div class="no-activities">
+      <i class="pi pi-info-circle"></i>
+      <p>Aucune activité récente</p>
+    </div>
+  </ng-template>
+</div>

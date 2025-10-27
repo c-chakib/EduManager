@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../services/socket.service';
 import { AuthService } from '../../services/auth.service';
+import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 
 interface ChatMessage {
@@ -27,6 +28,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   messages: ChatMessage[] = [];
   newMessage = '';
   currentUserId: string | null = null;
+  currentUserRole: string | null = null;
   isTyping = false;
   otherUserTyping = false;
   typingUserName = '';
@@ -35,11 +37,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   constructor(
     private socketService: SocketService,
-    private authService: AuthService
+    private authService: AuthService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
-    this.currentUserId = this.authService.getCurrentUser()?._id || null;
+    const currentUser = this.authService.getCurrentUser();
+    this.currentUserId = currentUser?._id || null;
+    this.currentUserRole = currentUser?.role || null;
 
     // Load chat history when connecting
     this.subscription.add(
@@ -69,6 +74,16 @@ export class ChatComponent implements OnInit, OnDestroy {
         } else {
           this.typingUserName = '';
         }
+      })
+    );
+
+    // Listen for chat cleared event
+    this.subscription.add(
+      this.socketService.onChatCleared().subscribe((data: any) => {
+        console.log('[Chat] Received chatCleared event:', data);
+        this.messages = []; // Clear local messages
+        // Optionally show a notification
+        alert(`Chat effacé par ${data.clearedBy.prenom} ${data.clearedBy.nom} (${data.messageCount} messages supprimés)`);
       })
     );
   }
@@ -137,6 +152,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   isMyMessage(message: ChatMessage): boolean {
     return message.senderId === this.currentUserId;
+  }
+
+  isAdmin(): boolean {
+    return this.currentUserRole === 'admin' || this.currentUserRole === 'super-admin';
   }
 
   formatTime(date: Date): string {

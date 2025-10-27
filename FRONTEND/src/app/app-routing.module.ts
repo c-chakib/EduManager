@@ -18,9 +18,13 @@ import { AccessibilityComponent } from './pages/accessibility/accessibility.comp
 import { AdminApprovalsComponent } from './admin/admin-approvals/admin-approvals.component';
 import { UserManagementComponent } from './admin/user-management/user-management.component';
 import { ChatPageComponent } from './pages/chat/chat.component';
+import { HomeResolver } from './resolvers/home.resolver';
+import { DashboardResolver } from './resolvers/dashboard.resolver';
+import { UserProfileResolver } from './resolvers/user-profile.resolver';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 const routes: Routes = [
-  { path: '', component: HomeComponent },
+  { path: '', component: HomeComponent, resolve: { homeData: HomeResolver } },
   { 
     path: 'auth/login', 
     component: LoginComponent,
@@ -36,13 +40,17 @@ const routes: Routes = [
   { 
     path: 'profile', 
     component: ProfileComponent,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    resolve: {
+      profileData: UserProfileResolver
+    }
   },
   { 
     path: 'dashboard', 
     component: DashboardComponent,
     canActivate: [RoleGuard],
-    data: { roles: ['admin'] }
+    data: { roles: ['admin'] },
+    resolve: { dashboardData: DashboardResolver }
   },
   // Redirect legacy approvals route to unified user management
   {
@@ -84,7 +92,8 @@ const routes: Routes = [
   { path: 'terms', component: TermsComponent },
   { path: 'cookies', component: CookiesComponent },
   { path: 'accessibility', component: AccessibilityComponent },
-  { path: '**', redirectTo: '' }
+  { path: 'not-found', component: NotFoundComponent },
+  { path: '**', component: NotFoundComponent }
 ];
 
 @NgModule({

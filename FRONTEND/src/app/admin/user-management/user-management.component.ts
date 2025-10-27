@@ -4,6 +4,7 @@ import { User } from '../../models/user.model';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { SocketService } from '../../services/socket.service';
+import { RecentActivityService } from '../../services/recent-activity.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -15,6 +16,7 @@ import { Subscription } from 'rxjs';
 export class UserManagementComponent implements OnInit, OnDestroy {
   users: User[] = [];
   filteredUsers: User[] = [];
+  pendingUsers: User[] = [];
   loading = false;
   
   // Filters
@@ -39,7 +41,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private logger: LoggerService,
     private toastService: ToastService,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private recentActivityService: RecentActivityService
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +94,22 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       this.socketService.onUserRejected().subscribe((data: any) => {
         console.log('[UserManagement] Received userRejected event:', data);
         this.addNotification('Rejet utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserSuspended().subscribe((data: any) => {
+        console.log('[UserManagement] Received userSuspended event:', data);
+        this.addNotification('Suspension utilisateur', data);
+        this.loadUsers(); // Refresh the list
+      })
+    );
+
+    this.subscription.add(
+      this.socketService.onUserReactivated().subscribe((data: any) => {
+        console.log('[UserManagement] Received userReactivated event:', data);
+        this.addNotification('Réactivation utilisateur', data);
         this.loadUsers(); // Refresh the list
       })
     );
@@ -177,6 +196,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           summary = `Compte approuvé: ${user}`;
         } else if (action.includes('Rejet')) {
           summary = `Compte rejeté: ${user}${data.reason ? ` - Raison: ${data.reason}` : ''}`;
+        } else if (action.includes('Suspension')) {
+          summary = `Compte suspendu: ${user}${data.reason ? ` - Raison: ${data.reason}` : ''}`;
+        } else if (action.includes('Réactivation')) {
+          summary = `Compte réactivé: ${user}`;
         }
       }
     }
@@ -196,6 +219,22 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     if (this.notifications.length > 10) {
       this.notifications = this.notifications.slice(0, 10);
     }
+
+    // Log to Recent Activity Service
+    const activityType = action.includes('Création') ? 'user_created' :
+                        action.includes('Modification') ? 'user_updated' :
+                        action.includes('Suppression') ? 'user_deleted' :
+                        'user_status_changed';
+
+    this.recentActivityService.addActivity({
+      type: activityType,
+      action: action,
+      details: summary,
+      userId: data.user?.id || '',
+      userName: user,
+      performedBy: data.updatedBy?.id || data.deletedBy?.id || data.approvedBy?.id || data.rejectedBy?.id || data.suspendedBy?.id || data.reactivatedBy?.id || '',
+      performedByName: performedBy
+    });
 
     // Auto-show notifications for 5 seconds
     this.showNotifications = true;
@@ -242,6 +281,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.users = response.data;
         this.filteredUsers = response.data;
+        this.pendingUsers = this.users.filter(u => u.accountStatus === 'pending');
         this.loading = false;
         this.logger.info('Loaded users', { count: response.count });
       },

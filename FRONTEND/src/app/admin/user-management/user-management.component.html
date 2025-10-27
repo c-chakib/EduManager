@@ -98,23 +98,46 @@
           <option value="user">Utilisateur</option>
         </select>
       </div>
-      <div class="filter-group filter-actions">
-        <app-button 
-          variant="primary" 
-          icon="pi pi-filter" 
-          (clicked)="filterStatus='pending'; onFilterChange()"
-          title="Afficher uniquement les demandes d'inscription en attente">
-          Voir les demandes
-        </app-button>
-        <app-button 
-          variant="secondary" 
-          icon="pi pi-list" 
-          (clicked)="resetFilters()"
-          title="Afficher tous les utilisateurs">
-          Voir tous
-        </app-button>
-      </div>
+      <!-- Removed filter action buttons as per new requirements -->
     </div>
+  </app-card>
+
+  <!-- Recent Activity Section -->
+
+  <div class="activity-section">
+    <app-recent-activity></app-recent-activity>
+  </div>
+
+  <!-- Pending Demandes Section -->
+  <app-card variant="elevated" padding="md" style="margin-top: 1rem;">
+    <h3>Demandes d'inscription en attente</h3>
+  <div *ngIf="pendingUsers.length === 0" class="empty-pending">
+      <i class="pi pi-info-circle"></i>
+      <span>Aucune demande en attente</span>
+    </div>
+  <table *ngIf="pendingUsers.length > 0" class="pending-table">
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Date d'inscription</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+  <tr *ngFor="let user of pendingUsers">
+          <td>{{ user.prenom }} {{ user.nom }}</td>
+          <td>{{ user.mail }}</td>
+          <td>{{ getRoleLabel(user.role) }}</td>
+          <td>{{ getCreationDate(user.createdAt) }}</td>
+          <td>
+            <app-button variant="success" size="sm" icon="pi pi-check" (clicked)="approveUser(user)" title="Approuver"></app-button>
+            <app-button variant="warning" size="sm" icon="pi pi-times" (clicked)="rejectUser(user)" title="Refuser"></app-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </app-card>
 
   <!-- Loading State -->

@@ -15,12 +15,25 @@ import { EtudiantFormComponent } from './etudiant-form/etudiant-form.component';
 
 
 import { RouterModule, Routes } from '@angular/router';
+import { StudentsResolver, StudentDetailResolver } from '../resolvers';
 
 const routes: Routes = [
-  { path: '', component: ListeEtudiantsComponent },
+  { 
+    path: '', 
+    component: ListeEtudiantsComponent,
+    resolve: {
+      studentsData: StudentsResolver
+    }
+  },
   { path: 'form', component: EtudiantFormComponent },
   { path: 'edit/:id', component: EtudiantFormComponent },
-  { path: ':id', component: DetailsEtudiantsComponent },
+  { 
+    path: ':id', 
+    component: DetailsEtudiantsComponent,
+    resolve: {
+      studentData: StudentDetailResolver
+    }
+  },
 ];
 
 @NgModule({

@@ -1,0 +1,10 @@
+export { DataResolver } from './data.resolver';
+export type { ResolverData, ResolverConfig } from './data.resolver';
+export { StudentsResolver } from './students.resolver';
+export type { StudentsResolverData } from './students.resolver';
+export { StudentDetailResolver } from './student-detail.resolver';
+export type { StudentDetailResolverData } from './student-detail.resolver';
+export { UserProfileResolver } from './user-profile.resolver';
+export type { UserProfileResolverData } from './user-profile.resolver';
+export { HomeResolver } from './home.resolver';
+export { DashboardResolver } from './dashboard.resolver';

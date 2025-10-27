@@ -2,6 +2,7 @@ import {Router} from "express";
 import {GetAllEtudiants, GetEtudiantById, CreateEtudiant, UpdateEtudiant, DeleteEtudiant} from './controler/controler.js';
 import {GetAllMatieres, GetAllMatieresDetails, GetMatiereById, CreateMatiere, UpdateMatiere, DeleteMatiere} from './controler/controlerMatieres.js';
 import { authentification, role } from "./middelware/authentification.js";
+import Message from './modeles/message.js';
 
 const myRouter = Router();
 

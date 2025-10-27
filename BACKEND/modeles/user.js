@@ -36,7 +36,12 @@ const userSchema = new mongoose.Schema({
     nom: { type: String, required: true, trim: true },
     prenom: { type: String, required: true, trim: true },
     mail: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true },
+    password: { type: String, required: function() { return !this.isGoogleUser; } }, // Password not required for Google users
+    
+    // Google Authentication
+    googleId: { type: String, sparse: true, unique: true },
+    isGoogleUser: { type: Boolean, default: false },
+    profilePicture: { type: String, default: '' },
     
     // Rôle et permissions
     role: { 

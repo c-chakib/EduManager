@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './services/auth.service';
+import { GoogleAuthService } from './services/google-auth.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -10,9 +12,17 @@ import { AuthService } from './services/auth.service';
 export class AppComponent implements OnInit {
   title = 'etudiants';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private googleAuthService: GoogleAuthService
+  ) {}
 
   ngOnInit(): void {
+    // Initialize Google Sign-In
+    if (environment.google?.clientId) {
+      this.googleAuthService.initializeGoogleSignIn(environment.google.clientId);
+    }
+
     // Auto-refresh user data on app load if authenticated
     if (this.authService.isAuthenticated()) {
       this.authService.refreshCurrentUser().subscribe({

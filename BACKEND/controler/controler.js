@@ -106,7 +106,11 @@ export async function GetAllEtudiants(req, res, next) {
 export async function GetEtudiantById(req, res, next) {
     try { 
         const etudiants = await Etudiant.findOne({id:req.params.id});
-        res.status(200).json(etudiants);
+        
+        // Add 500ms timeout for testing
+        setTimeout(() => {
+            res.status(200).json(etudiants);
+        }, 500);
     } catch (error) {
         next(error);
     }

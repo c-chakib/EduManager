@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {registerUser,loginUser,getAllUsers,updateUserProfile,changePassword,getPendingUsers,approveUser,rejectUser,getAllUsersManagement,updateUserById,deleteUserById,suspendUser,reactivateUser,getCurrentUser} from "./controler/controlerUser.js";
+import {registerUser,loginUser,getAllUsers,updateUserProfile,changePassword,getPendingUsers,approveUser,rejectUser,getAllUsersManagement,updateUserById,deleteUserById,suspendUser,reactivateUser,getCurrentUser,googleSignUp,googleSignIn} from "./controler/controlerUser.js";
 
 const routerUser = Router();
 
@@ -7,6 +7,9 @@ import { authentification, role } from "./middelware/authentification.js";
 
 routerUser.post('/register', registerUser);
 routerUser.post('/login', loginUser);
+// Google Authentication routes
+routerUser.post('/google-signup', googleSignUp);
+routerUser.post('/google-signin', googleSignIn);
 // Get current user (refresh)
 routerUser.get('/me', authentification, getCurrentUser);
 // Only admin can see all users

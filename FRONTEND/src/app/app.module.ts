@@ -26,6 +26,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { BadgeModule } from 'primeng/badge';
 import { AvatarModule } from 'primeng/avatar';
 import { DividerModule } from 'primeng/divider';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { DocumentationComponent } from './pages/documentation/documentation.component';
 import { GuideComponent } from './pages/guide/guide.component';
 import { FaqComponent } from './pages/faq/faq.component';
@@ -47,6 +49,9 @@ import { TableComponent } from './shared/components/table/table.component';
 import { AdminApprovalsComponent } from './admin/admin-approvals/admin-approvals.component';
 import { UserManagementComponent } from './admin/user-management/user-management.component';
 import { RoleBadgeComponent } from './shared/components/role-badge/role-badge.component';
+import { RecentActivityComponent } from './shared/recent-activity/recent-activity.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { GoogleAuthService } from './services/google-auth.service';
 
 @NgModule({
   declarations: [
@@ -72,7 +77,9 @@ import { RoleBadgeComponent } from './shared/components/role-badge/role-badge.co
     ChatbotComponent,
     NewlineToBrPipe,
     AdminApprovalsComponent,
-    UserManagementComponent
+    UserManagementComponent,
+    RecentActivityComponent,
+    NotFoundComponent
   ],
   imports: [
     BrowserModule,
@@ -99,14 +106,17 @@ import { RoleBadgeComponent } from './shared/components/role-badge/role-badge.co
     TooltipModule,
     BadgeModule,
     AvatarModule,
-    DividerModule
+    DividerModule,
+    ConfirmDialogModule
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true
-    }
+    },
+    ConfirmationService,
+    GoogleAuthService
   ],
   bootstrap: [AppComponent]
 })

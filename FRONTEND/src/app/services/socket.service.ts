@@ -74,6 +74,24 @@ export class SocketService {
     });
   }
 
+  onUserSuspended(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userSuspended', (data: any) => observer.next(data));
+    });
+  }
+
+  onUserReactivated(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('userReactivated', (data: any) => observer.next(data));
+    });
+  }
+
+  onChatCleared(): Observable<any> {
+    return new Observable<any>(observer => {
+      this.socket.on('chatCleared', (data: any) => observer.next(data));
+    });
+  }
+
   // Online users and chat methods
   userOnline(userData: any): void {
     this.socket.emit('userOnline', userData);
