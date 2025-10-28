@@ -27,7 +27,12 @@
         <h3 class="contact-title">{{method.title}}</h3>
         <p class="contact-info">{{method.info}}</p>
         <p class="contact-description">{{method.description}}</p>
-        <a [href]="method.link" class="contact-button">Contacter</a>
+        <ng-container *ngIf="method.title !== 'Chat en direct'; else chatButton">
+          <a [href]="method.link" class="contact-button">Contacter</a>
+        </ng-container>
+        <ng-template #chatButton>
+          <button class="contact-button" (click)="openChatbot()">Ouvrir le chat</button>
+        </ng-template>
       </div>
     </div>
 

@@ -32,10 +32,17 @@ export class SupportComponent {
       title: 'Chat en direct',
       icon: 'fas fa-comments',
       info: 'Disponible maintenant',
-      description: 'Support instantané',
-      link: '#chat'
+      description: 'Support instantané'
+      // No link, handled by button
     }
   ];
+
+  openChatbot(): void {
+    // Implement chatbot widget opening logic here
+    // Example: window.dispatchEvent(new Event('open-chatbot'));
+    // Or call a chatbot service if available
+    console.log('Chatbot opened');
+  }
 
   supportForm = {
     name: '',
