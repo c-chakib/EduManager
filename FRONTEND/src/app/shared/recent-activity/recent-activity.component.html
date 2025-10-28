@@ -31,7 +31,9 @@
           <div class="activity-description">{{ activity.details }}</div>
           <div class="activity-performer">
             <span class="performer-label">Par:</span>
-            <span class="performer-name">{{ activity.performedByName }}</span>
+            <span class="performer-name">
+              {{ activity.performedByName && activity.performedByName !== 'Utilisateur' ? activity.performedByName : (activity.performedBy || 'Utilisateur') }}
+            </span>
           </div>
         </div>
       </div>

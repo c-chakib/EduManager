@@ -21,14 +21,121 @@ type SortKey = 'nom_asc' | 'nom_desc' | 'prenom_asc' | 'prenom_desc' | 'id_asc' 
   changeDetection: ChangeDetectionStrategy.Default
 })
 export class ListeEtudiantsComponent implements OnInit {
+  matieresOptions: { label: string, value: string }[] = [];
+  // Called when matières filter changes
+  onMatieresFilterChange() {
+    this.pageIndex = 0;
+    this.loadStudents();
+  }
+  // Bulk import: open file dialog and send to backend
+  openBulkImportDialog() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = async (event: any) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const resp = await fetch(`${environment.apiUrl}/bulk-import`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        const result = await resp.json();
+        if (resp.ok) {
+          this.toastService.success(`Import terminé : ${result.inserted} ajoutés, ${result.errors.length} erreurs.`);
+          this.loadStudents();
+        } else {
+          this.toastService.error(result.message || 'Erreur lors de l\'import.');
+        }
+      } catch (err) {
+        this.toastService.error('Erreur réseau lors de l\'import.');
+      }
+    };
+    input.click();
+  }
+
+  // Bulk export: download template from backend
+  async exportStudentsTemplate() {
+    const url = `${environment.apiUrl}/etudiants/bulk-export-template`;
+    const token = this.authService.getToken && this.authService.getToken();
+    try {
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        credentials: 'include'
+      });
+      if (!resp.ok) {
+        const error = await resp.json();
+        this.toastService.error(error.message || 'Erreur lors du téléchargement du template.');
+        return;
+      }
+      const blob = await resp.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'etudiants_template.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      this.toastService.info('Téléchargement du template CSV...');
+    } catch (err) {
+      this.toastService.error('Erreur réseau lors du téléchargement du template.');
+    }
+  }
   private destroy$ = new Subject<void>();
 
   EtudiantsListe: Etudiants[] = [];
+  // Demo mode detection
+  isDemoMode = false;
   loading = false;
   error = '';
   totalCount = 0; // Total number of students from API
 
   // UI state
+    // Export only selected students as CSV
+    async exportSelectedStudents() {
+      if (!this.selectedStudents || this.selectedStudents.length === 0) {
+        this.toastService.info('Veuillez sélectionner au moins un étudiant à exporter.');
+        return;
+      }
+      const ids = this.selectedStudents.map(s => s.id);
+      try {
+        // Get JWT token from AuthService
+        const token = this.authService.getToken && this.authService.getToken();
+        const resp = await fetch(`${environment.apiUrl}/etudiants/export-selected`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ ids }),
+          credentials: 'include'
+        });
+        if (!resp.ok) {
+          const error = await resp.json();
+          this.toastService.error(error.message || 'Erreur lors de l\'export.');
+          return;
+        }
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'etudiants_selection.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        this.toastService.success('Export des étudiants sélectionnés terminé.');
+      } catch (err) {
+        this.toastService.error('Erreur réseau lors de l\'export.');
+      }
+    }
   searchTerm = '';
   selectedMatieres: string[] = [];
   sortBy: SortKey = 'nom_asc';
@@ -240,18 +347,32 @@ export class ListeEtudiantsComponent implements OnInit {
       this.loadStudents(eventTime);
     });
 
-    // Initial load - use resolved data if available
-    const resolvedData = this.route.snapshot.data['studentsData'] as StudentsResolverData;
-    if (resolvedData && resolvedData.data && !resolvedData.error) {
-      // FIX: Create copies of student data to avoid reference issues
-      this.EtudiantsListe = this.normalizeStudentData(resolvedData.data.students || []);
-      this.totalCount = resolvedData.data.total || 0;
-      this.loading = false;
-      this.logger.debug('Using resolved student data', { count: this.EtudiantsListe.length, total: this.totalCount });
+    // Detect demo mode from router URL (works for both direct and lazy-loaded routes)
+  this.isDemoMode = this.router.url.includes('/demo/etudiants') || !!(this.route.snapshot.routeConfig?.path?.includes('demo/etudiants'));
+
+    if (this.isDemoMode) {
+      this.logger.debug('Demo mode detected in ngOnInit, loading demo students');
+      this.loadDemoStudents();
     } else {
-      // Fallback: load data if resolver didn't provide it
-      this.loadStudents();
+      // Initial load - use resolved data if available
+      const resolvedData = this.route.snapshot.data['studentsData'] as StudentsResolverData;
+      if (resolvedData && resolvedData.data && !resolvedData.error) {
+        // FIX: Create copies of student data to avoid reference issues
+        this.EtudiantsListe = this.normalizeStudentData(resolvedData.data.students || []);
+        this.totalCount = resolvedData.data.total || 0;
+        this.loading = false;
+        this.logger.debug('Using resolved student data', { count: this.EtudiantsListe.length, total: this.totalCount });
+      } else {
+        // Fallback: load data if resolver didn't provide it
+        this.loadStudents();
+      }
     }
+    // Update matières options for dropdown
+    this.updateMatieresOptions();
+  }
+
+  updateMatieresOptions() {
+    this.matieresOptions = (this.matieresDisponibles || []).map(m => ({ label: m, value: m }));
   }
 
   ngOnDestroy() {
@@ -275,11 +396,9 @@ export class ListeEtudiantsComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // Check if we're in demo mode (public route)
-    const isDemoMode = this.router.url.includes('/demo/');
-
-    if (isDemoMode) {
-      this.logger.debug('Demo mode detected, loading demo data');
+    // Use isDemoMode property for demo mode detection
+    if (this.isDemoMode) {
+      this.logger.debug('Demo mode detected in loadStudents, loading demo data');
       this.loadDemoStudents();
       return;
     }

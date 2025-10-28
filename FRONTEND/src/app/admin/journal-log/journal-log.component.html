@@ -1,0 +1,87 @@
+<div class="journal-log-wrapper">
+  <div class="journal-header">
+    <h1><i class="pi pi-book"></i> Journal des Actions</h1>
+    <div class="journal-filters">
+      <input type="date" [(ngModel)]="startDate" (change)="onFilterChange()" placeholder="Date début" class="filter-input" />
+      <input type="date" [(ngModel)]="endDate" (change)="onFilterChange()" placeholder="Date fin" class="filter-input" />
+      <input type="text" [(ngModel)]="userFilter" (input)="onFilterChange()" (blur)="onFilterChange()" placeholder="Utilisateur (nom ou prénom)" class="filter-input" />
+      <select [(ngModel)]="actionFilter" (change)="onFilterChange()" class="filter-input">
+        <option value="">Toutes les actions</option>
+        <option value="create">Création</option>
+        <option value="update">Modification</option>
+        <option value="delete">Suppression</option>
+      </select>
+      <button class="btn-refresh" (click)="resetFilters()" style="background-color:#e5e7eb;color:#1e3a8a;"><i class="pi pi-times"></i> Réinitialiser</button>
+    </div>
+  </div>
+  <div *ngIf="loading" class="journal-loading">
+    <i class="pi pi-spin pi-spinner"></i> Chargement du journal...
+  </div>
+  <div *ngIf="error" class="journal-error">{{ error }}</div>
+  <div class="journal-table-container" *ngIf="!loading && journals.length > 0">
+    <div class="journal-table-info">
+      <span class="journal-table-count">
+        <i class="pi pi-list"></i>
+        {{ journals.length }} entrée(s) affichée(s)
+      </span>
+    </div>
+    <table class="journal-table">
+      <thead class="journal-table-sticky">
+        <tr>
+          <th class="checkbox-th">
+            <input type="checkbox" [(ngModel)]="selectAll" (change)="toggleSelectAll()" title="Tout sélectionner" />
+          </th>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Collection</th>
+          <th>ID</th>
+          <th>Utilisateur</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody>
+  <tr *ngFor="let entry of journals; let i = index" [class.selected-row]="selected[i]" class="journal-row">
+          <td class="checkbox-td">
+            <input type="checkbox" [(ngModel)]="selected[i]" title="Sélectionner cette entrée" />
+          </td>
+          <td>{{ entry.timestamp | date:'short' }}</td>
+          <td>
+            <span class="badge badge-action-{{entry.action}}">{{ entry.action | uppercase }}</span>
+          </td>
+          <td>{{ entry.collection }}</td>
+          <td>{{ entry.documentId }}</td>
+          <td>
+            <div class="user-info">
+              <span class="user-icon" title="Utilisateur"><i class="pi pi-user"></i></span>
+              <span class="user-name">
+                <ng-container *ngIf="entry.user?.prenom || entry.user?.nom; else noName">
+                  {{ entry.user?.prenom }} {{ entry.user?.nom }}
+                </ng-container>
+                <ng-template #noName>
+                  <span class="text-gray-400 italic">Utilisateur inconnu</span>
+                </ng-template>
+              </span>
+              <span class="user-role" *ngIf="entry.user?.role">({{ entry.user?.role }})</span>
+            </div>
+          </td>
+          <td>
+            <details>
+              <summary>Données</summary>
+              <pre>{{ entry.dataAfter ? (entry.dataAfter | json) : (entry.dataBefore | json) }}</pre>
+            </details>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div *ngIf="!loading && journals.length === 0" class="journal-empty">
+    <i class="pi pi-info-circle"></i> Aucune entrée de journal trouvée.
+  </div>
+  <div class="export-bar">
+    <span class="export-count">
+      <i class="pi pi-check-square"></i>
+      {{ getSelectedCount() }} sélectionné(s) à exporter
+    </span>
+  <app-journal-export [journalEntries]="getSelectedLogs()"></app-journal-export>
+  </div>
+</div>

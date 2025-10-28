@@ -1,3 +1,4 @@
+import { MultiSelectModule } from 'primeng/multiselect';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -52,8 +53,9 @@ const routes: Routes = [
     BadgeComponent,
     CardComponent,
     LoadingSpinnerComponent,
-  EmptyStateComponent,
-  CeilPipe
+    EmptyStateComponent,
+    CeilPipe,
+    MultiSelectModule
   ]
 })
 export class EtudiantsModule { }

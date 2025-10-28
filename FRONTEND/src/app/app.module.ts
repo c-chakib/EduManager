@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -51,14 +51,15 @@ import { UserManagementComponent } from './admin/user-management/user-management
 import { RoleBadgeComponent } from './shared/components/role-badge/role-badge.component';
 import { RecentActivityComponent } from './shared/recent-activity/recent-activity.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { JournalLogComponent } from './admin/journal-log/journal-log.component';
 import { GoogleAuthService } from './services/google-auth.service';
 
 @NgModule({
   declarations: [
     AppComponent,
-  // ListeEtudiantsComponent, // declared in EtudiantsModule
-  // DetailsEtudiantsComponent, // declared in EtudiantsModule
-  // EtudiantFormComponent, // declared in EtudiantsModule
+    // ListeEtudiantsComponent, // declared in EtudiantsModule
+    // DetailsEtudiantsComponent, // declared in EtudiantsModule
+    // EtudiantFormComponent, // declared in EtudiantsModule
     HomeComponent,
     NavbarComponent,
     FooterComponent,
@@ -79,12 +80,12 @@ import { GoogleAuthService } from './services/google-auth.service';
     AdminApprovalsComponent,
     UserManagementComponent,
     RecentActivityComponent,
-    NotFoundComponent
+  NotFoundComponent,
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    CommonModule,
+  CommonModule,
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
@@ -97,8 +98,8 @@ import { GoogleAuthService } from './services/google-auth.service';
     BadgeComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
-    TableComponent,
-    RoleBadgeComponent,
+  TableComponent,
+  RoleBadgeComponent,
     // PrimeNG Modules
     ButtonModule,
     CardModule,
@@ -115,9 +116,9 @@ import { GoogleAuthService } from './services/google-auth.service';
       useClass: AuthInterceptor,
       multi: true
     },
-    ConfirmationService,
-    GoogleAuthService
+    ConfirmationService
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  schemas: [NO_ERRORS_SCHEMA]
 })
 export class AppModule { }

@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { LoginRequest } from '../../models/user.model';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { GoogleAuthService, GoogleUser } from '../../services/google-auth.service';
+import { GoogleAuthService } from '../../services/google-auth.service';
 import { environment } from '../../../environments/environment';
 
 declare var google: any;
@@ -18,6 +17,30 @@ declare var google: any;
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  loginForm: FormGroup;
+  loading = false;
+  error = '';
+  info = '';
+  returnUrl = '';
+  isGoogleInitialized = false;
+  private googleLoginInProgress = false;
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private authService: AuthService,
+    private googleAuthService: GoogleAuthService,
+    private logger: LoggerService,
+    private toastService: ToastService
+  ) {
+    this.loginForm = this.fb.group({
+      mail: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
   get mail() {
     return this.loginForm.get('mail');
   }
@@ -27,6 +50,47 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.loginForm.valid) {
+      this.loading = true;
+      this.error = '';
+      const credentials = {
+        mail: this.loginForm.value.mail,
+        password: this.loginForm.value.password
+      };
+      if (this.googleLoginInProgress) {
+        // Prevent duplicate toast if Google login just happened
+        this.googleLoginInProgress = false;
+        return;
+      }
+      this.authService.login(credentials).subscribe(
+        () => {
+          this.toastService.success('Connexion réussie !', 'Bienvenue', 3000);
+          const returnUrl = this.returnUrl || '/dashboard';
+          this.router.navigate([returnUrl]);
+        },
+        (error) => {
+          this.logger.error('Erreur de connexion', error);
+          this.loading = false;
+          if (error.status === 404) {
+            this.error = 'Aucun compte trouvé. Veuillez vous inscrire d\'abord.';
+            this.toastService.error(this.error, 'Compte non trouvé');
+          } else if (error.status === 403) {
+            this.error = error.error?.message || 'Accès refusé.';
+            this.toastService.warning(this.error, 'Compte non actif', 5000);
+          } else {
+            this.error = error.error?.message || 'Erreur lors de la connexion.';
+            this.toastService.error(this.error, 'Erreur');
+          }
+        }
+      );
+    } else {
+      Object.keys(this.loginForm.controls).forEach(key => {
+        this.loginForm.get(key)?.markAsTouched();
+      });
+    }
+  }
+
+  onGoogleFallbackLogin(): void {
     if (this.loginForm.valid) {
       this.loading = true;
       this.error = '';
@@ -61,33 +125,6 @@ export class LoginComponent implements OnInit {
       });
     }
   }
-  private destroy$ = new Subject<void>();
-  
-  loginForm: FormGroup;
-  loading = false;
-  error = '';
-  info = '';
-  returnUrl = '';
-  isGoogleInitialized = false;
-  
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private authService: AuthService,
-    private googleAuthService: GoogleAuthService,
-    private logger: LoggerService,
-    private toastService: ToastService
-  ) {
-    // Initialize the login form
-    this.loginForm = this.fb.group({
-      mail: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
-
-  // ...existing code...
-    // ...existing code...
 
   ngOnInit(): void {
     // Render Google Sign-In button
@@ -101,6 +138,7 @@ export class LoginComponent implements OnInit {
           // Use the credential directly from the response
           const idToken = response.credential;
           if (idToken) {
+            this.googleLoginInProgress = true;
             this.googleAuthService.handleCredentialResponse(response);
             this.authService.googleSignIn(idToken).subscribe(
               (result) => {
@@ -120,17 +158,14 @@ export class LoginComponent implements OnInit {
                   this.error = 'Aucun compte Google trouvé. Veuillez vous inscrire d\'abord.';
                   this.toastService.error(this.error, 'Compte non trouvé');
                 } else if (error.status === 403) {
-                  this.error = error.error?.message || 'Accès refusé.';
+                  this.error = error.error?.message || 'Accès Google refusé.';
                   this.toastService.warning(this.error, 'Compte non actif', 5000);
                 } else {
-                  this.error = error.error?.message || 'Erreur lors de la connexion Google.';
+                  this.error = error.error?.message || 'Erreur Google.';
                   this.toastService.error(this.error, 'Erreur Google');
                 }
               }
             );
-          } else {
-            this.error = 'Token Google manquant.';
-            this.toastService.error(this.error, 'Erreur Google');
           }
         }
       });

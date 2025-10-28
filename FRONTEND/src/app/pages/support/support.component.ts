@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { LoggerService } from '../../core/services/logger.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { ChatbotService } from '../../shared/services/chatbot.service';
 
 @Component({
   selector: 'app-support',
@@ -11,7 +12,8 @@ import { ToastService } from '../../shared/services/toast.service';
 export class SupportComponent {
   constructor(
     private logger: LoggerService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private chatbotService: ChatbotService
   ) {}
   contactMethods = [
     {
@@ -67,5 +69,9 @@ export class SupportComponent {
       message: '',
       priority: 'normal'
     };
+  }
+
+  openChatbot(): void {
+    this.chatbotService.openChat();
   }
 }

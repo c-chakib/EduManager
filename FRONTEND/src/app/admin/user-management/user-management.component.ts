@@ -151,10 +151,14 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           user = `ID: ${data.id}`;
         }
         // Try to extract who performed the action
-        if (data.updatedBy) {
-          performedBy = `${data.updatedBy.nom || ''} ${data.updatedBy.prenom || ''}`.trim() || data.updatedBy.role || 'Utilisateur';
-        } else if (data.deletedBy) {
-          performedBy = `${data.deletedBy.nom || ''} ${data.deletedBy.prenom || ''}`.trim() || data.deletedBy.role || 'Utilisateur';
+        if (data.updatedBy && (data.updatedBy.nom || data.updatedBy.prenom)) {
+          performedBy = `${data.updatedBy.nom || ''} ${data.updatedBy.prenom || ''}`.trim();
+        } else if (data.deletedBy && (data.deletedBy.nom || data.deletedBy.prenom)) {
+          performedBy = `${data.deletedBy.nom || ''} ${data.deletedBy.prenom || ''}`.trim();
+        } else if (data.createdBy && (data.createdBy.nom || data.createdBy.prenom)) {
+          performedBy = `${data.createdBy.nom || ''} ${data.createdBy.prenom || ''}`.trim();
+        } else {
+          performedBy = 'Utilisateur';
         }
         // Details for modification
         if (action.includes('Modification')) {
@@ -227,13 +231,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                         'user_status_changed';
 
     this.recentActivityService.addActivity({
-      type: activityType,
-      action: action,
-      details: summary,
-      userId: data.user?.id || '',
-      userName: user,
-      performedBy: data.updatedBy?.id || data.deletedBy?.id || data.approvedBy?.id || data.rejectedBy?.id || data.suspendedBy?.id || data.reactivatedBy?.id || '',
-      performedByName: performedBy
+  type: activityType,
+  action: action,
+  details: summary,
+  userId: data.user?.id || '',
+  userName: user,
+  performedBy: performedBy, // always nom/prenom or role
+  performedByName: performedBy
     });
 
     // Auto-show notifications for 5 seconds

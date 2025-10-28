@@ -186,9 +186,21 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Use trackBy for ngFor performance
+  trackByFeature(index: number, feature: Feature): string {
+    return feature.title;
+  }
+
+  // Improved navigation with fallback
   navigateToFeature(route: string): void {
-    if (route) {
+    // Validate route exists in router config
+    const routePath = route.replace(/^\//, '');
+    if (route && this.router.config.some(r => r.path === routePath)) {
       this.router.navigate([route]);
+    } else {
+      // Fallback: navigate to not-found or show toast
+      this.router.navigate(['/not-found']);
+      // Optionally: this.toastService?.error('Page non trouvée');
     }
   }
 

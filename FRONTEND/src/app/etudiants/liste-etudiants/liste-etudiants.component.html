@@ -24,6 +24,27 @@
         (clicked)="addNewStudent()">
         Ajouter un étudiant
       </app-button>
+      <app-button
+        *ngIf="canEditStudents()"
+        variant="secondary"
+        icon="pi pi-upload"
+        (clicked)="openBulkImportDialog()">
+        Importer des étudiants
+      </app-button>
+      <app-button
+        *ngIf="canEditStudents() && selectedStudents.length > 0"
+        variant="secondary"
+        icon="pi pi-download"
+        (clicked)="exportSelectedStudents()">
+        Exporter la sélection
+      </app-button>
+      <app-button
+        *ngIf="canEditStudents()"
+        variant="secondary"
+        icon="pi pi-file"
+        (clicked)="exportStudentsTemplate()">
+        Télécharger le template d'import
+      </app-button>
     </div>
   </div>
 
@@ -48,29 +69,19 @@
       </button>
     </label>
 
-    <label class="field matiere-filter" [class.open]="showMatiereDropdown" aria-label="Filtrer par matière">
-      <i class="pi pi-filter" aria-hidden="true"></i>
-      <div class="multi-select-wrapper">
-        <button type="button" class="multi-select-toggle" (click)="toggleMatiereDropdown()">
-          <span *ngIf="selectedMatieres.length === 0">Toutes les matières</span>
-          <span *ngIf="selectedMatieres.length === 1">{{ selectedMatieres[0] }}</span>
-          <span *ngIf="selectedMatieres.length > 1">{{ selectedMatieres.length }} matières sélectionnées</span>
-          <i class="pi pi-chevron-down"></i>
-        </button>
-        <div class="multi-select-dropdown" *ngIf="showMatiereDropdown">
-          <div class="multi-select-option" *ngFor="let m of matieresDisponibles">
-            <label>
-              <input 
-                type="checkbox" 
-                [checked]="selectedMatieres.includes(m)"
-                (change)="toggleMatiere(m)"
-              />
-              <span>{{ m }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </label>
+    <div class="field matiere-filter" aria-label="Filtrer par matière">
+      <p-multiSelect
+        [options]="matieresOptions"
+        [(ngModel)]="selectedMatieres"
+        defaultLabel="Toutes les matières"
+        (onChange)="onMatieresFilterChange()"
+        optionLabel="label"
+        display="chip"
+        class="w-full md:w-20rem"
+        placeholder="Filtrer par matière"
+        ariaLabel="Filtrer par matière"
+      ></p-multiSelect>
+    </div>
 
     <label class="field" aria-label="Tri">
       <i class="pi pi-sort-alt" aria-hidden="true"></i>
@@ -212,53 +223,6 @@
   <form>
     <div class="students-grid" *ngIf="!loading && !error && pagedEtudiants.length">
       <!-- Enhanced Bulk Actions Bar with Select All -->
-      <div class="bulk-actions-bar" *ngIf="pagedEtudiants.length > 0">
-        <div class="bulk-select">
-          <label class="checkbox-label">
-            <input 
-              type="checkbox" 
-              [(ngModel)]="selectAll" 
-              name="selectAll" 
-              (change)="toggleSelectAll()"
-              class="styled-checkbox"
-              aria-label="Sélectionner tous les étudiants de la page" />
-            <span class="checkbox-text">
-              <i class="pi pi-check-square" *ngIf="selectAll" aria-hidden="true"></i>
-              <i class="pi pi-square" *ngIf="!selectAll" aria-hidden="true"></i>
-              Tout sélectionner
-            </span>
-          </label>
-        </div>
-        
-        <!-- Selection Counter with Actions -->
-        <div class="bulk-info" *ngIf="selectedStudents.length > 0">
-          <app-badge variant="primary" size="lg">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            {{ selectedStudents.length }} étudiant{{ selectedStudents.length > 1 ? 's' : '' }} sélectionné{{ selectedStudents.length > 1 ? 's' : '' }}
-          </app-badge>
-          
-          <!-- Future bulk actions (disabled for now, shows preparation) -->
-          <div class="bulk-actions">
-            <app-button 
-              variant="ghost" 
-              size="sm"
-              icon="pi pi-download"
-              [disabled]="true"
-              title="Prochainement : Exporter la sélection">
-              Exporter
-            </app-button>
-            <app-button 
-              *ngIf="canEditStudents()"
-              variant="ghost" 
-              size="sm"
-              icon="pi pi-trash"
-              [disabled]="true"
-              title="Prochainement : Supprimer la sélection">
-              Supprimer
-            </app-button>
-          </div>
-        </div>
-      </div>
 
       <!-- Student Cards -->
       <article
@@ -269,7 +233,7 @@
         [attr.aria-label]="'Voir détails de ' + etudiant.prenom + ' ' + etudiant.nom"
         role="group"
       >
-        <input type="checkbox" [(ngModel)]="etudiant.selected" name="selected_{{etudiant.id}}" (change)="toggleStudentSelection(etudiant)" class="student-select-checkbox" />
+  <input type="checkbox" [checked]="etudiant.selected" name="selected_{{etudiant.id}}" (change)="toggleStudentSelection(etudiant)" class="student-select-checkbox" />
         
         <!-- Header with Avatar and Basic Info -->
         <div class="student-card__header">

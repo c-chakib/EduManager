@@ -22,6 +22,7 @@ import { HomeResolver } from './resolvers/home.resolver';
 import { DashboardResolver } from './resolvers/dashboard.resolver';
 import { UserProfileResolver } from './resolvers/user-profile.resolver';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { JournalLogComponent } from './admin/journal-log/journal-log.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent, resolve: { homeData: HomeResolver } },
@@ -61,6 +62,12 @@ const routes: Routes = [
   {
     path: 'admin/users',
     component: UserManagementComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['super-admin'] }
+  },
+  {
+    path: 'admin/journal',
+    loadChildren: () => import('./admin/journal-log/journal-log.module').then(m => m.JournalLogModule),
     canActivate: [RoleGuard],
     data: { roles: ['super-admin'] }
   },

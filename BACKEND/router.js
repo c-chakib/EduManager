@@ -1,11 +1,31 @@
+import multer from 'multer';
+const bulkUpload = multer({ dest: 'uploads/bulk/' });
+const jsonUpload = multer({ dest: 'uploads/json/' });
+import { BulkExportEtudiantsJSON, BulkImportEtudiantsJSON } from './controler/controler.js';
+// Bulk export all students as JSON
+const myRouter = Router();
+
+myRouter.get('/bulk-export-json', authentification, role('admin', 'user'), BulkExportEtudiantsJSON);
+
+// Bulk import students from JSON
+myRouter.post('/bulk-import-json', jsonUpload.single('file'), authentification, role('admin'), BulkImportEtudiantsJSON);
+
 import {Router} from "express";
-import {GetAllEtudiants, GetEtudiantById, CreateEtudiant, UpdateEtudiant, DeleteEtudiant} from './controler/controler.js';
+import {GetAllEtudiants, GetEtudiantById, CreateEtudiant, UpdateEtudiant, DeleteEtudiant, BulkImportEtudiants, BulkExportEtudiantsTemplate, BulkExportSelectedStudents} from './controler/controler.js';
 import {GetAllMatieres, GetAllMatieresDetails, GetMatiereById, CreateMatiere, UpdateMatiere, DeleteMatiere} from './controler/controlerMatieres.js';
 import { authentification, role } from "./middelware/authentification.js";
 import upload from './middelware/upload.js'; 
 import Message from './modeles/message.js';
 
-const myRouter = Router();
+
+// Bulk import students (CSV)
+myRouter.post('/bulk-import', bulkUpload.single('file'), authentification, role('admin'), BulkImportEtudiants);
+
+// Bulk export template (CSV)
+myRouter.get('/bulk-export-template', authentification, role('admin', 'user'), BulkExportEtudiantsTemplate);
+
+// Export selected students as CSV
+myRouter.post('/export-selected', authentification, role('admin', 'user'), BulkExportSelectedStudents);
 
 // Middleware to conditionally apply authentication (skip for demo mode)
 const conditionalAuth = (req, res, next) => {

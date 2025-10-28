@@ -9,7 +9,7 @@ export interface RecentActivity {
   userId: string;
   userName: string;
   performedBy: string;
-  performedByName: string;
+  performedByName?: string;
   timestamp: Date;
   expiresAt: Date;
 }
@@ -31,8 +31,14 @@ export class RecentActivityService {
 
   // Add a new activity
   addActivity(activity: Omit<RecentActivity, 'id' | 'timestamp' | 'expiresAt'>): void {
+    // Fallback logic for performedByName
+    let performedByName = activity.performedByName;
+    if (!performedByName || performedByName === 'Utilisateur') {
+      performedByName = activity.performedBy || 'Utilisateur';
+    }
     const newActivity: RecentActivity = {
       ...activity,
+      performedByName,
       id: this.generateId(),
       timestamp: new Date(),
       expiresAt: new Date(Date.now() + this.EXPIRY_HOURS * 60 * 60 * 1000)

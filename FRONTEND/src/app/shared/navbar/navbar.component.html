@@ -1,152 +1,203 @@
-<nav class="navbar">
+<nav class="navbar" role="navigation" aria-label="Main navigation">
   <div class="nav-container">
-    <!-- Logo -->
+    
+    <!-- Logo Section -->
     <div class="nav-logo">
-      <a routerLink="/" class="logo-link" (click)="closeMenu()">
+      <a routerLink="/" class="logo-link" (click)="closeMenu()" aria-label="EduManager Home">
         <div class="logo-icon">
-          <img src="assets/logo.svg" alt="EduManager Logo" class="logo-image">
+          <span style="font-size: 1.5rem;">📚</span>
         </div>
         <span class="logo-text">EduManager</span>
       </a>
     </div>
 
-
-    <!-- Desktop / Mobile Menu -->
-    <ul class="nav-menu" [class.active]="isMenuOpen">
-      <li class="nav-item">
-        <a
-          routerLink="/"
-          class="nav-link"
-          [class.active]="isActive('/')"
-          (click)="closeMenu()"
-        >
-          <i class="nav-icon">🏠</i>
-          <span>Accueil</span>
-        </a>
-      </li>
-      <li class="nav-item">
+    <!-- Navigation Menu -->
+    <ul class="nav-menu" [class.active]="isMenuOpen" role="menubar">
+      
+      <!-- Étudiants -->
+      <li class="nav-item" role="none">
         <a
           routerLink="/etudiants"
           class="nav-link"
           [class.active]="isActive('/etudiants')"
           (click)="closeMenu()"
+          role="menuitem"
         >
-          <i class="nav-icon">👥</i>
+          <i class="nav-icon" aria-hidden="true">👥</i>
           <span>Étudiants</span>
         </a>
       </li>
+
       <!-- Dashboard (admin and super-admin) -->
-      <li class="nav-item" *ngIf="(currentUser$ | async)?.role === 'admin' || (currentUser$ | async)?.role === 'super-admin'">
+      <li 
+        class="nav-item" 
+        role="none"
+        *ngIf="(currentUser$ | async)?.role === 'admin' || (currentUser$ | async)?.role === 'super-admin'"
+      >
         <a
           routerLink="/dashboard"
           class="nav-link"
           [class.active]="isActive('/dashboard')"
           (click)="closeMenu()"
+          role="menuitem"
         >
-          <i class="nav-icon">📊</i>
+          <i class="nav-icon" aria-hidden="true">📊</i>
           <span>Dashboard</span>
         </a>
       </li>
-      <!-- User Management (super-admin only, includes approvals) -->
-      <li class="nav-item" *ngIf="isSuperAdmin()" style="position:relative;">
+
+      <!-- User Management (super-admin only) -->
+      <li 
+        class="nav-item" 
+        role="none"
+        *ngIf="isSuperAdmin()"
+      >
         <a
           routerLink="/admin/users"
           class="nav-link"
           [class.active]="isActive('/admin/users')"
-          (click)="closeMenu(); notifDropdownOpen = false;"
+          (click)="closeMenu()"
+          role="menuitem"
         >
-          <i class="nav-icon">👥</i>
+          <i class="nav-icon" aria-hidden="true">👥</i>
           <span>Gestion Utilisateurs</span>
+          <span class="badge badge-warning" *ngIf="pendingCount > 0">
+            {{ pendingCount }}
+          </span>
         </a>
-        <!-- Separate Notification Button -->
-        <button
-          *ngIf="userNotifCount > 0"
-          class="notif-bell-btn"
-          (click)="toggleNotifDropdown($event)"
-          title="Notifications récentes"
-        >
-          <i class="pi pi-bell"></i>
-          <span class="notif-count">{{ userNotifCount }}</span>
-        </button>
-        <!-- Notification Dropdown -->
-        <div class="notif-dropdown" *ngIf="notifDropdownOpen">
-          <div class="notif-dropdown-header">
-            <span>Notifications récentes</span>
-            <button class="notif-close-btn" (click)="resetUserNotif()">✕</button>
-          </div>
-          <div *ngIf="userNotifDetails.length === 0" class="notif-empty">Aucune notification</div>
-          <ul *ngIf="userNotifDetails.length > 0">
-            <li *ngFor="let notif of userNotifDetails">
-              <span class="notif-action">{{ notif.action }}</span>
-              <span class="notif-user">par {{ notif.user }}</span>
-              <span class="notif-time">({{ notif.time | date:'shortTime' }})</span>
-              <div class="notif-details">{{ notif.details }}</div>
-            </li>
-          </ul>
-        </div>
       </li>
+
+      <!-- Journal Log (super-admin only) -->
+      <li 
+        class="nav-item" 
+        role="none"
+        *ngIf="isSuperAdmin()"
+      >
+        <a
+          routerLink="/admin/journal"
+          class="nav-link"
+          [class.active]="isActive('/admin/journal')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">📓</i>
+          <span>Journal Log</span>
+        </a>
+      </li>
+
       <!-- Chat (authenticated users) -->
-      <li class="nav-item" *ngIf="isAuthenticated$ | async">
+      <li 
+        class="nav-item" 
+        role="none"
+        *ngIf="isAuthenticated$ | async"
+      >
         <a
           routerLink="/chat"
           class="nav-link"
           [class.active]="isActive('/chat')"
           (click)="closeMenu()"
+          role="menuitem"
         >
-          <i class="nav-icon">💬</i>
+          <i class="nav-icon" aria-hidden="true">💬</i>
           <span>Messages</span>
         </a>
       </li>
     </ul>
 
     <!-- Action Buttons -->
-    <div class="nav-actions" [class.active]="isMenuOpen">
-      <!-- Authenticated User -->
+    <div class="nav-actions">
+      
+      <!-- Authenticated User Actions -->
       <ng-container *ngIf="isAuthenticated$ | async; else guestActions">
         <ng-container *ngIf="currentUser$ | async as user">
-          <!-- User Info Button -->
-          <a 
-            routerLink="/profile" 
-            class="btn btn-user-info"
-            (click)="closeMenu()"
-            [class.active]="isActive('/profile')">
-            <span class="user-greeting">👤</span>
+          
+          <!-- User Dropdown -->
+          <div 
+            class="user-dropdown-trigger"
+            [class.active]="userDropdownOpen"
+            tabindex="0"
+            role="button"
+            aria-haspopup="true"
+            [attr.aria-expanded]="userDropdownOpen"
+            (click)="toggleUserDropdown($event)"
+            (keydown.enter)="toggleUserDropdown($event)"
+            (keydown.space)="toggleUserDropdown($event)"
+          >
+            <span class="user-greeting" aria-hidden="true">👤</span>
             <div class="user-details">
               <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
-              <app-role-badge [role]="user.role" style="font-size: 0.7rem;"></app-role-badge>
+              <span class="user-role" [class.admin]="user.role === 'admin' || user.role === 'super-admin'">
+                {{ user.role === 'super-admin' ? '👑 Super Admin' : user.role === 'admin' ? '⭐ Admin' : '👤 ' + user.role }}
+              </span>
             </div>
-          </a>
-          
-          <!-- Logout Button -->
-          <button class="btn btn-danger" (click)="logout(); closeMenu()">
-            <i class="pi pi-sign-out btn-icon"></i>
-            <span>Déconnexion</span>
-          </button>
+            <span class="dropdown-caret" aria-hidden="true">▼</span>
+            
+            <!-- Dropdown Menu -->
+            <div 
+              class="user-dropdown-menu" 
+              *ngIf="userDropdownOpen"
+              (click)="$event.stopPropagation()"
+              role="menu"
+            >
+              <button 
+                class="dropdown-item" 
+                (click)="goToProfile()"
+                role="menuitem"
+              >
+                <i aria-hidden="true">👤</i>
+                <span>Mon Profil</span>
+              </button>
+              <button 
+                class="dropdown-item" 
+                (click)="logout()"
+                role="menuitem"
+              >
+                <i aria-hidden="true">🚪</i>
+                <span>Déconnexion</span>
+              </button>
+            </div>
+          </div>
+
         </ng-container>
       </ng-container>
 
-      <!-- Guest Actions -->
+      <!-- Guest User Actions -->
       <ng-template #guestActions>
         <div class="auth-buttons">
-          <!-- Demo Mode Link -->
-          <a routerLink="/demo/etudiants" class="btn btn-demo" (click)="closeMenu()">
-            <i class="btn-icon">👁️</i>
+          
+          <!-- Demo Button -->
+          <a 
+            routerLink="/demo/etudiants" 
+            class="btn btn-demo" 
+            (click)="closeMenu()"
+          >
+            <i class="btn-icon" aria-hidden="true">👁️</i>
             <span>Mode Découverte</span>
           </a>
-          
+
           <!-- Login Button -->
-          <a routerLink="/auth/login" class="btn btn-outline" (click)="closeMenu()">
-            <i class="pi pi-sign-in btn-icon"></i>
+          <a 
+            routerLink="/auth/login" 
+            class="btn btn-outline" 
+            (click)="closeMenu()"
+          >
+            <i class="pi pi-sign-in btn-icon" aria-hidden="true"></i>
             <span>Connexion</span>
           </a>
-          
+
           <!-- Register Button -->
-          <a routerLink="/auth/register" class="btn btn-primary" (click)="closeMenu()">
-            <i class="pi pi-user-plus btn-icon"></i>
+          <a 
+            routerLink="/auth/register" 
+            class="btn btn-primary" 
+            (click)="closeMenu()"
+          >
+            <i class="pi pi-user-plus btn-icon" aria-hidden="true"></i>
             <span>Inscription</span>
           </a>
+
         </div>
       </ng-template>
+
     </div>
 
     <!-- Mobile Menu Toggle -->
@@ -154,9 +205,8 @@
       class="nav-toggle"
       type="button"
       (click)="toggleMenu()"
-      [class.active]="isMenuOpen"
       [attr.aria-expanded]="isMenuOpen"
-      aria-label="Ouvrir/fermer le menu"
+      aria-label="Toggle navigation menu"
     >
       <div class="hamburger" [class.open]="isMenuOpen">
         <span></span>
@@ -165,9 +215,124 @@
       </div>
     </button>
 
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-overlay" [class.active]="isMenuOpen" (click)="closeMenu()"></div>
+  </div>
 
-  </div> <!-- End nav-container -->
+
+  <!-- Mobile Menu Overlay with nav links and actions -->
+  <div *ngIf="isMenuOpen" class="mobile-menu">
+    <button class="mobile-menu-close" (click)="closeMenu()" aria-label="Fermer le menu" style="position:absolute;top:18px;right:18px;background:none;border:none;font-size:2rem;z-index:10001;cursor:pointer;">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <ul class="nav-menu" role="menubar">
+      <!-- Étudiants -->
+      <li class="nav-item" role="none">
+        <a
+          routerLink="/etudiants"
+          class="nav-link"
+          [class.active]="isActive('/etudiants')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">👥</i>
+          <span>Étudiants</span>
+        </a>
+      </li>
+      <!-- Dashboard (admin and super-admin) -->
+      <li class="nav-item" role="none" *ngIf="(currentUser$ | async)?.role === 'admin' || (currentUser$ | async)?.role === 'super-admin'">
+        <a
+          routerLink="/dashboard"
+          class="nav-link"
+          [class.active]="isActive('/dashboard')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">📊</i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <!-- User Management (super-admin only) -->
+      <li class="nav-item" role="none" *ngIf="isSuperAdmin()">
+        <a
+          routerLink="/admin/users"
+          class="nav-link"
+          [class.active]="isActive('/admin/users')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">👥</i>
+          <span>Gestion Utilisateurs</span>
+          <span class="badge badge-warning" *ngIf="pendingCount > 0">{{ pendingCount }}</span>
+        </a>
+      </li>
+      <!-- Journal Log (super-admin only) -->
+      <li class="nav-item" role="none" *ngIf="isSuperAdmin()">
+        <a
+          routerLink="/admin/journal"
+          class="nav-link"
+          [class.active]="isActive('/admin/journal')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">📓</i>
+          <span>Journal Log</span>
+        </a>
+      </li>
+      <!-- Chat (authenticated users) -->
+      <li class="nav-item" role="none" *ngIf="isAuthenticated$ | async">
+        <a
+          routerLink="/chat"
+          class="nav-link"
+          [class.active]="isActive('/chat')"
+          (click)="closeMenu()"
+          role="menuitem"
+        >
+          <i class="nav-icon" aria-hidden="true">💬</i>
+          <span>Messages</span>
+        </a>
+      </li>
+    </ul>
+    <div class="nav-actions">
+      <ng-container *ngIf="isAuthenticated$ | async; else guestActions">
+        <ng-container *ngIf="currentUser$ | async as user">
+          <div class="user-dropdown-trigger" [class.active]="userDropdownOpen" tabindex="0" role="button" aria-haspopup="true">
+            <span class="user-greeting" aria-hidden="true">👤</span>
+            <div class="user-details">
+              <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
+              <span class="user-role" [class.admin]="user.role === 'admin' || user.role === 'super-admin'">
+                {{ user.role === 'super-admin' ? '👑 Super Admin' : user.role === 'admin' ? '⭐ Admin' : '👤 ' + user.role }}
+              </span>
+            </div>
+            <span class="dropdown-caret" aria-hidden="true">▼</span>
+            <div class="user-dropdown-menu" *ngIf="userDropdownOpen" (click)="$event.stopPropagation()" role="menu">
+              <button class="dropdown-item" (click)="goToProfile()" role="menuitem">
+                <i aria-hidden="true">👤</i>
+                <span>Mon Profil</span>
+              </button>
+              <button class="dropdown-item" (click)="logout()" role="menuitem">
+                <i aria-hidden="true">🚪</i>
+                <span>Déconnexion</span>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #guestActions>
+        <div class="auth-buttons">
+          <a routerLink="/demo/etudiants" class="btn btn-demo" (click)="closeMenu()">
+            <i class="btn-icon" aria-hidden="true">👁️</i>
+            <span>Mode Découverte</span>
+          </a>
+          <a routerLink="/auth/login" class="btn btn-outline" (click)="closeMenu()">
+            <i class="pi pi-sign-in btn-icon" aria-hidden="true"></i>
+            <span>Connexion</span>
+          </a>
+          <a routerLink="/auth/register" class="btn btn-primary" (click)="closeMenu()">
+            <i class="pi pi-user-plus btn-icon" aria-hidden="true"></i>
+            <span>Inscription</span>
+          </a>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
 </nav>
-

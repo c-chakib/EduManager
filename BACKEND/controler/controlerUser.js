@@ -53,6 +53,14 @@ export async function registerUser(req, res, next) {
         role: newUser.role,
         accountStatus: newUser.accountStatus
       },
+      createdBy: {
+        id: req.user?.userId,
+        nom: req.user?.nom,
+        prenom: req.user?.prenom,
+        role: req.user?.role
+      },
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
       timestamp: new Date()
     });
     console.log('[Socket.io] Emitted userCreated event for user:', newUser._id);
@@ -314,6 +322,8 @@ export async function updateUserById(req, res, next) {
         prenom: req.user?.prenom,
         role: req.user?.role
       },
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
       changes: updateData,
       timestamp: new Date()
     });
@@ -376,6 +386,8 @@ export async function deleteUserById(req, res, next) {
         prenom: req.user?.prenom,
         role: req.user?.role
       },
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
       timestamp: new Date()
     });
     console.log('[Socket.io] Emitted userDeleted event for user:', user._id);
@@ -486,7 +498,13 @@ export async function approveUser(req, res, next) {
     user.approvalDate = new Date();
     // Audit log
     user.auditLog = user.auditLog || [];
-    user.auditLog.push({ action: 'approve', by: approverId, reason: 'Admin approval' });
+    user.auditLog.push({
+      action: 'approve',
+      by: approverId,
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
+      reason: 'Admin approval'
+    });
     await user.save();
 
     // Emit Socket.io event for real-time updates
@@ -546,7 +564,13 @@ export async function rejectUser(req, res, next) {
     user.rejectionDate = new Date();
     // Audit log
     user.auditLog = user.auditLog || [];
-    user.auditLog.push({ action: 'reject', by: req.user.userId, reason });
+    user.auditLog.push({
+      action: 'reject',
+      by: req.user.userId,
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
+      reason
+    });
     await user.save();
 
     // Emit Socket.io event for real-time updates
@@ -594,7 +618,13 @@ export async function suspendUser(req, res, next) {
     }
     user.accountStatus = 'suspended';
     user.auditLog = user.auditLog || [];
-    user.auditLog.push({ action: 'suspend', by: req.user.userId, reason });
+    user.auditLog.push({
+      action: 'suspend',
+      by: req.user.userId,
+      nom: req.user?.nom,
+      prenom: req.user?.prenom,
+      reason
+    });
     await user.save();
 
     // Emit Socket.io event for real-time updates
@@ -634,7 +664,12 @@ export async function reactivateUser(req, res, next) {
     }
     user.accountStatus = 'approved';
     user.auditLog = user.auditLog || [];
-    user.auditLog.push({ action: 'reactivate', by: req.user.userId });
+    user.auditLog.push({
+      action: 'reactivate',
+      by: req.user.userId,
+      nom: req.user?.nom,
+      prenom: req.user?.prenom
+    });
     await user.save();
 
     // Emit Socket.io event for real-time updates

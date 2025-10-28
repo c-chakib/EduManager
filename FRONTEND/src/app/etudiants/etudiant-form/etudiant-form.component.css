@@ -708,7 +708,7 @@ textarea.form-control {
 .btn--primary {
   background: var(--accent);
   border: 1px solid var(--accent);
-  color: white;
+  color: rgb(0, 0, 0);
 }
 
 .btn--primary:hover {

@@ -11,7 +11,21 @@ export async function authentification(req, res, next) {
             return res.status(401).json({ message: 'Token is missing' });
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+
+        // Always attach full user info to req.user
+        const User = (await import('../modeles/user.js')).default;
+        const dbUser = await User.findById(decoded.userId).lean();
+        if (!dbUser) {
+            return res.status(401).json({ message: 'Utilisateur introuvable' });
+        }
+        req.user = {
+            userId: dbUser._id,
+            nom: dbUser.nom,
+            prenom: dbUser.prenom,
+            role: dbUser.role,
+            mail: dbUser.mail,
+            ...decoded // include any other JWT fields
+        };
         next();
     } catch (error) {
         // Handle different JWT errors

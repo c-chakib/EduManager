@@ -11,6 +11,7 @@ import { NotFound } from './middelware/NotFound.js';
 import { errorHandler } from './middelware/StatusCode.js';
 import routerUser from './routerUser.js';
 import routerChatbot from './routerChatbot.js';
+import routerJournal from './routerJournal.js';
 import aiService from './services/aiService.js';
 import { authentification } from './middelware/authentification.js';
 import cors from 'cors';
@@ -69,6 +70,7 @@ app.use(morgan('combined'));
 app.use('/etudiants', myRouter);
 app.use('/users', routerUser);
 app.use('/chatbot', routerChatbot);
+app.use('/journal', routerJournal);
 
 // Chat routes - admin only for clearing chat
 app.delete('/chat/clear', authentification, async (req, res) => {

@@ -1,3 +1,162 @@
+// Bulk export all students as JSON
+export async function BulkExportEtudiantsJSON(req, res, next) {
+    try {
+        const students = await Etudiant.find({});
+        res.header('Content-Type', 'application/json');
+        res.attachment('etudiants_export.json');
+        res.send(JSON.stringify(students, null, 2));
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Bulk import students from JSON
+export async function BulkImportEtudiantsJSON(req, res, next) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Aucun fichier reçu.' });
+        }
+        const raw = await fs.promises.readFile(req.file.path, 'utf-8');
+        let students;
+        try {
+            students = JSON.parse(raw);
+        } catch (err) {
+            return res.status(400).json({ message: 'Fichier JSON invalide.' });
+        }
+        if (!Array.isArray(students)) {
+            return res.status(400).json({ message: 'Le fichier doit contenir un tableau d\'étudiants.' });
+        }
+        const inserted = [];
+        const errors = [];
+        for (const student of students) {
+            try {
+                const exists = await Etudiant.findOne({ mail: student.mail });
+                if (exists) {
+                    errors.push({ student, error: 'Email déjà utilisé.' });
+                    continue;
+                }
+                const newStudent = new Etudiant(student);
+                await newStudent.save();
+                inserted.push(newStudent);
+            } catch (err) {
+                errors.push({ student, error: err.message });
+            }
+        }
+        res.status(200).json({ inserted: inserted.length, errors });
+    } catch (error) {
+        next(error);
+    }
+}
+// Export only selected students as CSV
+export async function BulkExportSelectedStudents(req, res, next) {
+    try {
+        const ids = req.body.ids;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'Aucun étudiant sélectionné.' });
+        }
+        // Dynamically get all exportable fields from the schema
+        const allFields = Object.keys(Etudiant.schema.paths).filter(f => !['_id', '__v'].includes(f));
+        // Get selected students
+        const students = await Etudiant.find({ id: { $in: ids } }, allFields.join(' '));
+        // Build CSV
+        let csv = allFields.join(',') + '\n';
+        for (const s of students) {
+            csv += allFields.map(col => {
+                let val = s[col];
+                // Handle arrays of objects (notes, documents)
+                if (col === 'notes' && Array.isArray(val)) {
+                    // Export summary: matiere:note:type
+                    return val.map(note => {
+                        const matiere = note.matiere ? String(note.matiere).replace(/[,;]/g, ' ') : '';
+                        const noteVal = note.note !== undefined ? String(note.note) : '';
+                        const type = note.type ? String(note.type).replace(/[,;]/g, ' ') : '';
+                        return `${matiere}:${noteVal}:${type}`;
+                    }).join(';');
+                }
+                if (col === 'documents' && Array.isArray(val)) {
+                    // Export summary: nom:type
+                    return val.map(doc => {
+                        const nom = doc.nom ? String(doc.nom).replace(/[,;]/g, ' ') : '';
+                        const type = doc.type ? String(doc.type).replace(/[,;]/g, ' ') : '';
+                        return `${nom}:${type}`;
+                    }).join(';');
+                }
+                // Handle simple arrays (matieres)
+                if (Array.isArray(val)) {
+                    return val.map(v => String(v).replace(/[,;]/g, ' ')).join(';');
+                }
+                // Handle objects (flatten or export empty)
+                if (typeof val === 'object' && val !== null) {
+                    return '';
+                }
+                // Escape commas and semicolons in strings
+                return val ? String(val).replace(/[,;]/g, ' ') : '';
+            }).join(',') + '\n';
+        }
+        res.header('Content-Type', 'text/csv');
+        res.attachment('etudiants_selection.csv');
+        res.send(csv);
+    } catch (error) {
+        next(error);
+    }
+}
+// Bulk import students from CSV
+import csvParser from 'csv-parser';
+
+export async function BulkImportEtudiants(req, res, next) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Aucun fichier reçu.' });
+        }
+        const results = [];
+        const errors = [];
+        const stream = fs.createReadStream(req.file.path).pipe(csvParser());
+        stream.on('data', (row) => {
+            // Validate row structure (nom, prenom, mail, etc.)
+            if (!row.nom || !row.prenom || !row.mail) {
+                errors.push({ row, error: 'Champs obligatoires manquants.' });
+                return;
+            }
+            results.push(row);
+        });
+        stream.on('end', async () => {
+            // Insert valid students
+            const inserted = [];
+            for (const student of results) {
+                try {
+                    const exists = await Etudiant.findOne({ mail: student.mail });
+                    if (exists) {
+                        errors.push({ student, error: 'Email déjà utilisé.' });
+                        continue;
+                    }
+                    const newStudent = new Etudiant(student);
+                    await newStudent.save();
+                    inserted.push(newStudent);
+                } catch (err) {
+                    errors.push({ student, error: err.message });
+                }
+            }
+            res.status(200).json({ inserted: inserted.length, errors });
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Bulk export template as CSV
+export async function BulkExportEtudiantsTemplate(req, res, next) {
+    try {
+        // Dynamically get all exportable fields from the schema
+        const allFields = Object.keys(Etudiant.schema.paths).filter(f => !['_id', '__v'].includes(f));
+        // Build CSV: header + empty row
+        let csv = allFields.join(',') + '\n' + allFields.map(() => '').join(',') + '\n';
+        res.header('Content-Type', 'text/csv');
+        res.attachment('etudiants_template.csv');
+        res.send(csv);
+    } catch (error) {
+        next(error);
+    }
+}
 import Etudiant from "../modeles/etudiants.js";
 import { io } from "../index.js";
 import fs from 'fs';
@@ -166,6 +325,26 @@ export async function CreateEtudiant(req, res, next) {
 
         const newEtudiant = new Etudiant(studentData);
         const savedEtudiant = await newEtudiant.save();
+
+        // Journal log: create
+        try {
+            const Journal = (await import('../modeles/journal.js')).default;
+            await Journal.create({
+                action: 'create',
+                collection: 'etudiants',
+                documentId: savedEtudiant.id,
+                dataAfter: savedEtudiant,
+                user: {
+                    id: userId,
+                    nom: req.user?.nom,
+                    prenom: req.user?.prenom,
+                    role: req.user?.role
+                },
+                timestamp: new Date()
+            });
+        } catch (err) {
+            console.error('Journal log failed (create):', err);
+        }
         
         // Handle photo file renaming for new students
         if (req.file && req.file.filename.startsWith('temp-')) {
@@ -201,8 +380,16 @@ export async function CreateEtudiant(req, res, next) {
         }
         
         // Emit Socket.io event for real-time updates
-        io.emit('studentCreated', savedEtudiant);
-        console.log('[Socket.io] Emitted studentCreated event for student:', savedEtudiant.id);
+                io.emit('studentCreated', {
+                    student: savedEtudiant,
+                    createdBy: {
+                        id: userId,
+                        nom: req.user?.nom,
+                        prenom: req.user?.prenom
+                    },
+                    timestamp: new Date()
+                });
+                console.log('[Socket.io] Emitted studentCreated event for student:', savedEtudiant.id);
         
         res.status(201).json(savedEtudiant);
     } catch (error) {
@@ -245,11 +432,36 @@ export async function UpdateEtudiant(req, res, next) {
             updateData.photo = `/uploads/etudiants/${req.file.filename}`;
         }
         
+        // Get previous data for journal
+        const prevEtudiant = await Etudiant.findOne({id:req.params.id});
         const etudiant = await Etudiant.findOneAndUpdate(
             {id:req.params.id}, 
             updateData, 
             {new: true}
         );
+
+        // Journal log: update
+        if (etudiant) {
+            try {
+                const Journal = (await import('../modeles/journal.js')).default;
+                await Journal.create({
+                    action: 'update',
+                    collection: 'etudiants',
+                    documentId: etudiant.id,
+                    dataBefore: prevEtudiant,
+                    dataAfter: etudiant,
+                    user: {
+                        id: userId,
+                        nom: req.user?.nom,
+                        prenom: req.user?.prenom,
+                        role: req.user?.role
+                    },
+                    timestamp: new Date()
+                });
+            } catch (err) {
+                console.error('Journal log failed (update):', err);
+            }
+        }
         
         // Update user stats
         if (userId && etudiant) {
@@ -262,10 +474,18 @@ export async function UpdateEtudiant(req, res, next) {
         }
         
         // Emit Socket.io event for real-time updates
-        if (etudiant) {
-            io.emit('studentUpdated', etudiant);
-            console.log('[Socket.io] Emitted studentUpdated event for student:', etudiant.id);
-        }
+                if (etudiant) {
+                        io.emit('studentUpdated', {
+                            student: etudiant,
+                            updatedBy: {
+                                id: userId,
+                                nom: req.user?.nom,
+                                prenom: req.user?.prenom
+                            },
+                            timestamp: new Date()
+                        });
+                        console.log('[Socket.io] Emitted studentUpdated event for student:', etudiant.id);
+                }
         
         res.status(200).json(etudiant);
     } catch (error) {
@@ -274,13 +494,45 @@ export async function UpdateEtudiant(req, res, next) {
 }
 export async function DeleteEtudiant(req, res, next) {
     try {
+        // Get previous data for journal
+        const prevEtudiant = await Etudiant.findOne({id:req.params.id});
         const etudiant = await Etudiant.findOneAndDelete({id:req.params.id});
+
+        // Journal log: delete
+        if (prevEtudiant) {
+            try {
+                const Journal = (await import('../modeles/journal.js')).default;
+                await Journal.create({
+                    action: 'delete',
+                    collection: 'etudiants',
+                    documentId: req.params.id,
+                    dataBefore: prevEtudiant,
+                    user: {
+                        id: req.user?.userId,
+                        nom: req.user?.nom,
+                        prenom: req.user?.prenom,
+                        role: req.user?.role
+                    },
+                    timestamp: new Date()
+                });
+            } catch (err) {
+                console.error('Journal log failed (delete):', err);
+            }
+        }
         
         // Emit Socket.io event for real-time updates
-        if (etudiant) {
-            io.emit('studentDeleted', { student: { id: req.params.id } });
-            console.log('[Socket.io] Emitted studentDeleted event for student:', req.params.id);
-        }
+                if (etudiant) {
+                        io.emit('studentDeleted', {
+                            student: { id: req.params.id },
+                            deletedBy: {
+                                id: req.user?.userId,
+                                nom: req.user?.nom,
+                                prenom: req.user?.prenom
+                            },
+                            timestamp: new Date()
+                        });
+                        console.log('[Socket.io] Emitted studentDeleted event for student:', req.params.id);
+                }
         
         res.status(200).json(etudiant);
     } catch (error) {
