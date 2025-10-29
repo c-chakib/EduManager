@@ -21,8 +21,25 @@ type SortKey = 'nom_asc' | 'nom_desc' | 'prenom_asc' | 'prenom_desc' | 'id_asc' 
   changeDetection: ChangeDetectionStrategy.Default
 })
 export class ListeEtudiantsComponent implements OnInit {
+  // Fetch all matières from backend for dropdown
+  async fetchAllMatieres() {
+    try {
+  const resp = await fetch(`${environment.apiUrl}/etudiants/matieres/list`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (!resp.ok) return;
+      const matieres = await resp.json();
+      // Expecting array of strings
+      this.matieresDisponibles = Array.isArray(matieres) ? matieres : [];
+      this.updateMatieresOptions();
+    } catch (err) {
+      console.error('Failed to fetch all matieres:', err);
+    }
+  }
   matieresOptions: { label: string, value: string }[] = [];
-  // Called when matières filter changes
+  selectedMatieres: string[] = [];
+  // Called when matières filter changes (PrimeNG p-multiSelect)
   onMatieresFilterChange() {
     this.pageIndex = 0;
     this.loadStudents();
@@ -137,7 +154,6 @@ export class ListeEtudiantsComponent implements OnInit {
       }
     }
   searchTerm = '';
-  selectedMatieres: string[] = [];
   sortBy: SortKey = 'nom_asc';
 
   // Bulk selection
@@ -213,9 +229,7 @@ export class ListeEtudiantsComponent implements OnInit {
     this.searchControl.setValue(''); // This will trigger the debounced search automatically
   }
 
-  toggleMatiereDropdown() {
-    this.showMatiereDropdown = !this.showMatiereDropdown;
-  }
+  // Removed toggleMatiereDropdown (handled by PrimeNG)
 
   // Delete confirmation
   showDeleteConfirm = false;
@@ -224,8 +238,7 @@ export class ListeEtudiantsComponent implements OnInit {
   // filters data
   matieresDisponibles: string[] = [];
 
-  // matiere dropdown state
-  showMatiereDropdown = false;
+  // Remove custom dropdown state (handled by PrimeNG)
 
   // reactive search control used in template
   searchControl: FormControl = new FormControl('');
@@ -276,16 +289,7 @@ export class ListeEtudiantsComponent implements OnInit {
     event.target.style.display = 'none';
   }
 
-  // Close matières dropdown on outside click
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    if (!this.showMatiereDropdown) return;
-    const target = event.target as Node;
-    const filterEl = this.elRef.nativeElement.querySelector('.matiere-filter');
-    if (filterEl && !filterEl.contains(target)) {
-      this.showMatiereDropdown = false;
-    }
-  }
+  // Removed HostListener for custom dropdown closing (handled by PrimeNG)
 
   ngOnInit() {
     // Reactive search with debounceTime and switchMap
@@ -350,6 +354,8 @@ export class ListeEtudiantsComponent implements OnInit {
     // Detect demo mode from router URL (works for both direct and lazy-loaded routes)
   this.isDemoMode = this.router.url.includes('/demo/etudiants') || !!(this.route.snapshot.routeConfig?.path?.includes('demo/etudiants'));
 
+    // Always fetch all matieres for dropdown
+    this.fetchAllMatieres();
     if (this.isDemoMode) {
       this.logger.debug('Demo mode detected in ngOnInit, loading demo students');
       this.loadDemoStudents();
@@ -357,22 +363,22 @@ export class ListeEtudiantsComponent implements OnInit {
       // Initial load - use resolved data if available
       const resolvedData = this.route.snapshot.data['studentsData'] as StudentsResolverData;
       if (resolvedData && resolvedData.data && !resolvedData.error) {
-        // FIX: Create copies of student data to avoid reference issues
         this.EtudiantsListe = this.normalizeStudentData(resolvedData.data.students || []);
         this.totalCount = resolvedData.data.total || 0;
         this.loading = false;
         this.logger.debug('Using resolved student data', { count: this.EtudiantsListe.length, total: this.totalCount });
       } else {
-        // Fallback: load data if resolver didn't provide it
         this.loadStudents();
       }
     }
-    // Update matières options for dropdown
-    this.updateMatieresOptions();
   }
 
   updateMatieresOptions() {
-    this.matieresOptions = (this.matieresDisponibles || []).map(m => ({ label: m, value: m }));
+    // Normalize for backend filtering: value is lowercase, accent-free
+        this.matieresOptions = (this.matieresDisponibles || []).map(m => ({
+          label: m,
+          value: m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    }));
   }
 
   ngOnDestroy() {
@@ -384,13 +390,13 @@ export class ListeEtudiantsComponent implements OnInit {
   private loadStudents(eventTime?: number) {
     const startTime = Date.now();
     this.logger.debug('Loading students with filters', {
-      search: this.searchTerm,
-      matieres: this.selectedMatieres,
-      sortBy: this.sortBy,
-      page: this.pageIndex + 1,
-      pageSize: this.pageSize,
-      eventTime,
-      startTime
+            search: this.searchTerm,
+            matieres: this.selectedMatieres,
+            sortBy: this.sortBy,
+            page: this.pageIndex + 1,
+            pageSize: this.pageSize,
+            eventTime,
+            startTime
     });
 
     this.loading = true;
@@ -404,11 +410,15 @@ export class ListeEtudiantsComponent implements OnInit {
     }
 
     // Call backend with all filters
+    // Send only normalized values to backend
+        const matieresForApi = this.selectedMatieres.length > 0
+          ? this.selectedMatieres.map((m: any) => m && typeof m === 'object' && 'value' in m ? m.value : m)
+          : undefined;
     this.serv.getStudentList(
-      this.pageIndex + 1, // API uses 1-based pagination
+      this.pageIndex + 1,
       this.pageSize,
       this.searchTerm,
-      this.selectedMatieres.length > 0 ? this.selectedMatieres : undefined,
+      matieresForApi,
       this.sortBy
     )
       .pipe(takeUntil(this.destroy$))
@@ -429,26 +439,28 @@ export class ListeEtudiantsComponent implements OnInit {
 
           // FIX: Use normalized data with proper photo URLs
           this.EtudiantsListe = this.normalizeStudentData(resp.data);
-          
+
           // Fallback numeric sort on ID for UI reliability in UI
           if (this.sortBy.startsWith('id_')) {
-            const dir = this.sortBy.endsWith('_desc') ? -1 : 1;
-            this.EtudiantsListe = [...this.EtudiantsListe].sort((a, b) => {
-              const aId = typeof a.id === 'number' ? a.id : Number.MAX_SAFE_INTEGER;
-              const bId = typeof b.id === 'number' ? b.id : Number.MAX_SAFE_INTEGER;
-              if (aId === bId) return 0;
-              return aId < bId ? -1 * dir : 1 * dir;
-            });
+              const dir = this.sortBy.endsWith('_desc') ? -1 : 1;
+              this.EtudiantsListe = [...this.EtudiantsListe].sort((a, b) => {
+                const aId = typeof a.id === 'number' ? a.id : Number.MAX_SAFE_INTEGER;
+                const bId = typeof b.id === 'number' ? b.id : Number.MAX_SAFE_INTEGER;
+                if (aId === bId) return 0;
+                return aId < bId ? -1 * dir : 1 * dir;
+              });
           }
-          
+
           try {
-            const ids = this.EtudiantsListe.slice(0, 5).map(s => s.id);
-            this.logger.debug('First IDs after apply', { sortBy: this.sortBy, ids });
+              const ids = this.EtudiantsListe.slice(0, 5).map(s => s.id);
+              this.logger.debug('First IDs after apply', { sortBy: this.sortBy, ids });
           } catch {}
           this.totalCount = resp.total || resp.data.length;
 
-          // Build unique matières for filter dropdown
-          this.matieresDisponibles = this.extractUniqueMatieres(this.EtudiantsListe);
+          // Build unique matières for filter dropdown and update options
+    this.matieresDisponibles = this.extractUniqueMatieres(this.EtudiantsListe);
+    console.log('Loaded matieresDisponibles:', this.matieresDisponibles);
+    this.updateMatieresOptions();
 
           this.loading = false;
         },
@@ -590,18 +602,20 @@ export class ListeEtudiantsComponent implements OnInit {
 
   private extractUniqueMatieres(students: Etudiants[]): string[] {
     const set = new Set<string>();
-    students.forEach(s => (s.matieres || []).forEach(m => set.add(m)));
+    students.forEach(s => {
+      let matieresArr: string[] = [];
+      if (Array.isArray(s.matieres)) {
+        matieresArr = s.matieres as string[];
+      } else if (typeof s.matieres === 'string') {
+        matieresArr = (s.matieres as string).split(',').map((m: string) => m.trim()).filter((m: string) => m);
+      }
+      matieresArr.forEach((m: string) => set.add(m));
+    });
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
   }
 
   // UI Helper Methods
-  toggleMatiere(m: string) {
-    const idx = this.selectedMatieres.indexOf(m);
-    if (idx === -1) this.selectedMatieres.push(m);
-    else this.selectedMatieres.splice(idx, 1);
-    this.pageIndex = 0;
-    this.loadStudents(); // Trigger API call with new filters
-  }
+  // Removed toggleMatiere (handled by p-multiSelect)
 
   onFilterChange(): void {
     this.pageIndex = 0;

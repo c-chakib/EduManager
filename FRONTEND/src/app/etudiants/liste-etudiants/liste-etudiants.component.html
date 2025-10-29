@@ -69,17 +69,16 @@
       </button>
     </label>
 
-    <div class="field matiere-filter" aria-label="Filtrer par matière">
+    <!-- Unified matières filter using PrimeNG p-multiSelect -->
+    <div class="field matiere-filter">
       <p-multiSelect
         [options]="matieresOptions"
         [(ngModel)]="selectedMatieres"
-        defaultLabel="Toutes les matières"
-        (onChange)="onMatieresFilterChange()"
-        optionLabel="label"
         display="chip"
-        class="w-full md:w-20rem"
+        optionLabel="label"
         placeholder="Filtrer par matière"
-        ariaLabel="Filtrer par matière"
+        class="w-full md:w-20rem matiere-dropdown"
+        (onChange)="onMatieresFilterChange()"
       ></p-multiSelect>
     </div>
 
@@ -121,7 +120,7 @@
       <app-badge variant="secondary" size="md">
         <i class="pi pi-book" aria-hidden="true"></i>
         {{ m }}
-        <button type="button" class="chip-close" (click)="toggleMatiere(m)" aria-label="Retirer la matière">×</button>
+  <!-- Removed manual chip close button, handled by p-multiSelect -->
       </app-badge>
     </ng-container>
     <app-button variant="ghost" size="sm" icon="pi pi-times" (clicked)="clearFilters()">Tout effacer</app-button>

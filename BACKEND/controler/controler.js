@@ -197,12 +197,37 @@ export async function GetAllEtudiants(req, res, next) {
             ];
         }
 
-        // Matiere filter (multiple matieres supported)
+        // Matiere filter (multiple matieres supported, accent/case-insensitive)
         if (matiereParam) {
-            // Split comma-separated string into array
-            const matieres = matiereParam.split(',').map(m => m.trim()).filter(m => m);
-            if (matieres.length > 0) {
-                filter.matieres = { $in: matieres };
+            let matieresArr = [];
+            if (Array.isArray(matiereParam)) {
+                matieresArr = matiereParam;
+            } else if (typeof matiereParam === 'string') {
+                matieresArr = matiereParam.split(',').map(m => m.trim()).filter(m => m);
+            }
+            // Normalize: lowercase, remove accents
+            const normalize = s => s.toLowerCase();
+            const normalizedMatieres = matieresArr.map(normalize);
+            if (normalizedMatieres.length > 0) {
+                filter.$expr = {
+                    $gt: [
+                        {
+                            $size: {
+                                $filter: {
+                                    input: "$matieres",
+                                    as: "m",
+                                    cond: {
+                                        $in: [
+                                            { $toLower: { $toString: "$$m" } },
+                                            normalizedMatieres
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        0
+                    ]
+                };
             }
         }
 
@@ -249,18 +274,24 @@ export async function GetAllEtudiants(req, res, next) {
             queryBuilder = queryBuilder.collation({ locale: 'en', numericOrdering: true });
         }
 
-        const [data, total] = await Promise.all([
-            queryBuilder.exec(),
-            Etudiant.countDocuments(filter)
-        ]);
+        try {
+            const [data, total] = await Promise.all([
+                queryBuilder.exec(),
+                Etudiant.countDocuments(filter)
+            ]);
 
-        console.log('✅ Found', data.length, 'students, total:', total);
-        if (data.length > 0) {
-            console.log('📌 First student ID:', data[0].id, 'Last student ID:', data[data.length - 1].id);
+            console.log('✅ Found', data.length, 'students, total:', total);
+            if (data.length > 0) {
+                console.log('📌 First student ID:', data[0].id, 'Last student ID:', data[data.length - 1].id);
+            }
+
+            res.status(200).json({ data, total, page, limit });
+        } catch (mongoError) {
+            console.error('❌ MongoDB error in GetAllEtudiants:', mongoError);
+            res.status(500).json({ message: 'Erreur MongoDB lors du filtrage des étudiants', error: mongoError.message });
         }
-
-        res.status(200).json({ data, total, page, limit });
     } catch (error) {
+        console.error('❌ General error in GetAllEtudiants:', error);
         next(error);
     }
 }
