@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminApprovalsComponent } from './admin-approvals.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -10,7 +11,8 @@ describe('AdminApprovalsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [AdminApprovalsComponent],
-      imports: [RouterTestingModule, HttpClientTestingModule]
+  imports: [RouterTestingModule, HttpClientTestingModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
   });
 

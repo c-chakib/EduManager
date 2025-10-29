@@ -50,6 +50,7 @@
 
   <!-- Toolbar -->
   <div class="toolbar" role="region" aria-label="Filtres">
+    <form ngForm>
     <label class="field" aria-label="Recherche">
       <i class="pi pi-search" aria-hidden="true"></i>
       <input
@@ -72,6 +73,7 @@
     <!-- Unified matières filter using PrimeNG p-multiSelect -->
     <div class="field matiere-filter">
       <p-multiSelect
+        name="selectedMatieres"
         [options]="matieresOptions"
         [(ngModel)]="selectedMatieres"
         display="chip"
@@ -104,6 +106,7 @@
       (clicked)="clearFilters()">
       Réinitialiser
     </app-button>
+    </form>
   </div>
 
   <!-- Active filter chips -->

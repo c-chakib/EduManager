@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserManagementComponent } from './user-management.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -10,7 +12,8 @@ describe('UserManagementComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [UserManagementComponent],
-      imports: [RouterTestingModule, HttpClientTestingModule]
+  imports: [RouterTestingModule, HttpClientTestingModule, FormsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
   });
 

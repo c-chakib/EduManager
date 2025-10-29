@@ -1,3 +1,5 @@
+import { RouterTestingModule } from '@angular/router/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FooterComponent } from './footer.component';
 import { ChatbotService } from '../services/chatbot.service';
@@ -11,9 +13,11 @@ describe('FooterComponent', () => {
     chatbotServiceSpy = jasmine.createSpyObj('ChatbotService', ['openChat']);
     await TestBed.configureTestingModule({
       declarations: [FooterComponent],
+      imports: [RouterTestingModule],
       providers: [
         { provide: ChatbotService, useValue: chatbotServiceSpy }
-      ]
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
   });
 

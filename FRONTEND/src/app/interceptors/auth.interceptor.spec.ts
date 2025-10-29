@@ -17,17 +17,18 @@ describe('AuthInterceptor', () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     loggerSpy = jasmine.createSpyObj('LoggerService', ['debug', 'warn', 'error']);
 
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AuthService, useValue: authServiceSpy },
-        { provide: Router, useValue: routerSpy },
-        { provide: LoggerService, useValue: loggerSpy },
-        {
-          provide: HTTP_INTERCEPTORS,
-          useClass: AuthInterceptor,
-          multi: true
-        }
-      ]
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: AuthService, useValue: authServiceSpy },
+          { provide: Router, useValue: routerSpy },
+          { provide: LoggerService, useValue: loggerSpy },
+          {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+          },
+          AuthInterceptor
+        ]
     });
     interceptor = TestBed.inject(AuthInterceptor);
   });

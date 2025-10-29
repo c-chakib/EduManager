@@ -1,3 +1,4 @@
+import { FormsModule } from '@angular/forms';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CookiesComponent } from './cookies.component';
 
@@ -7,7 +8,8 @@ describe('CookiesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CookiesComponent]
+      declarations: [CookiesComponent],
+      imports: [FormsModule]
     }).compileComponents();
   });
 
