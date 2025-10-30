@@ -1,8 +1,17 @@
-# 🎓 Student Management System
+# 🎓 EduManager - Student Management System
 
 A full-stack web application for managing student records with real-time updates, AI-powered chatbot, and comprehensive user management.
 
-## 🚀 Features
+## � Recent Updates
+
+### v1.0.1 - October 2025
+- ✅ **Enhanced Test Suite**: Comprehensive test coverage with 85+ specs for ListeEtudiantsComponent
+- ✅ **Improved Testing Practices**: Professional test structure with proper mocking, async testing, and edge case coverage
+- ✅ **Database Initialization Guide**: Added detailed documentation for MongoDB setup and seeding
+- ✅ **Component Optimization**: Fixed NgControl provider issues and improved form handling
+- ✅ **Real-time Features**: Enhanced Socket.io integration for live data synchronization
+
+## �🚀 Features
 
 ### Core Functionality
 - ✅ **Student Management**: Complete CRUD operations for student records
@@ -45,8 +54,8 @@ A full-stack web application for managing student records with real-time updates
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/c-chakib/MODULE-5-INTEGRA-BACK-FRONT.git
-cd MODULE-5-INTEGRA-BACK-FRONT
+git clone https://github.com/c-chakib/EduManager.git
+cd EduManager
 ```
 
 ### 2. Backend Setup
@@ -115,6 +124,26 @@ NODE_ENV=development
 
 ## 🧪 Testing
 
+### Frontend Tests (Angular/Karma/Jasmine)
+```bash
+cd FRONTEND
+npm test                    # Run all tests with watch mode
+npm test -- --watch=false   # Run tests once (CI/CD)
+npm test -- --include="**/liste-etudiants.component.spec.ts"  # Run specific component tests
+```
+
+**Comprehensive Test Suite**: The project includes a professional test suite with 85+ specs for the ListeEtudiantsComponent, covering:
+- Component initialization and lifecycle
+- User permissions and role-based access
+- Navigation and routing
+- Pagination functionality
+- Student selection and bulk operations
+- Search and filtering capabilities
+- CRUD operations (Create, Read, Update, Delete)
+- Error handling and edge cases
+- Real-time updates via Socket.io
+- Form validation and user interactions
+
 ### Backend Tests
 ```bash
 cd BACKEND
@@ -133,27 +162,11 @@ npm run db:diagnose
 npm run db:dedupe
 ```
 
-## 📁 Project Structure
+## � Documentation
 
-```
-├── BACKEND/                 # Node.js/Express server
-│   ├── controler/          # Route controllers
-│   ├── modeles/            # MongoDB models
-│   ├── middelware/         # Custom middleware
-│   ├── router.js           # Main routes
-│   ├── test/               # Unit tests
-│   └── scripts/            # Database utilities
-├── FRONTEND/               # Angular application
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── etudiants/  # Student management
-│   │   │   ├── auth/       # Authentication
-│   │   │   ├── services/   # Angular services
-│   │   │   └── guards/     # Route guards
-│   └── public/             # Static assets
-├── docs/                   # Documentation
-└── README.md              # This file
-```
+- [Database Initialization Guide](docs/DATABASE_INITIALIZATION_GUIDE.md) - Complete setup guide for MongoDB
+- [API Documentation](docs/README.md) - Backend API reference
+- [Frontend Guide](FRONTEND/README.md) - Angular application documentation
 
 ## 🤝 Contributing
 
